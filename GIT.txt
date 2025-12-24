@@ -1,0 +1,16 @@
+1) git config --global user.email "tu-email-real@gmail.com"
+git config --global user.name "GIRALDOR192"
+
+2)cd "C:\Users\Giral\OneDrive\Documentos\CATQALOGO MOTOS\catalogo_completo"
+
+git init
+
+git add .
+
+git commit -m "Catálogo"
+
+git remote add origin https://github.com/GIRALDOR192/CATALOGO_TEMPLO_MOTOR.git
+
+git branch -M main
+
+git push -u origin main
