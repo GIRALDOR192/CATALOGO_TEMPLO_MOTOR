@@ -1,10 +1,10 @@
 REPORTE DE GENERACIÓN - TEMPLO GARAGE
-Fecha: 27/12/2025 02:46:50
+Fecha: 27/12/2025 02:50:34
 Total productos: 10,000
 Productos con precio: 9,993
 Marcas únicas: 7
 Tipos: 349
-Tiempo total: 4.05s
+Tiempo total: 3.66s
 Archivo generado: catalogo_templo_garage_profesional.html
 Tamaño: 14.72 MB
 
