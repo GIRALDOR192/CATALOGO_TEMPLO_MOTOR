@@ -1,0 +1,25 @@
+REPORTE DE GENERACIÓN - TEMPLO GARAGE
+Fecha: 26/12/2025 21:55:07
+Total productos: 10,000
+Productos con precio: 9,993
+Marcas únicas: 7
+Tipos: 349
+Tiempo total: 3.46s
+Archivo generado: catalogo_templo_garage_profesional.html
+Tamaño: 14.70 MB
+
+CONFIGURACIÓN WOMPI:
+- Llave Pública: pub_prod_I0KpwGvgPD3...
+- Secreto Integridad: prv_prod_vIazSzxilsF... (¡VERIFICA ESTO!)
+- Resend Key: re_ZewmUDhy_NoAiD8ss...
+- WhatsApp: 573224832415
+- Email: templogarage@gmail.com
+
+IMPORTANTE: Para que Wompi funcione, necesitas obtener tu SECRETO DE INTEGRIDAD real desde:
+Dashboard Wompi > Desarrolladores > Secretos para integración técnica
+
+ARCHIVOS UTILIZADOS:
+- Excel: C:\Users\Giral\OneDrive\Documentos\CATQALOGO MOTOS\catalogo_completo\CATALOGO TEMPLO GARAGE.xlsm
+- Logo Templo: C:\Users\Giral\OneDrive\Documentos\CATQALOGO MOTOS\logo\TEMPLO GARAGE STREET.png
+- Logo TikTok: C:\Users\Giral\OneDrive\Documentos\CATQALOGO MOTOS\logo\LOGO TIKTOK.png
+- Portada: C:\Users\Giral\OneDrive\Documentos\CATQALOGO MOTOS\logo\portada.png
