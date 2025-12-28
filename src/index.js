@@ -25,7 +25,14 @@ export default {
     const url = new URL(request.url);
 
     if (url.pathname === '/health') {
-      return jsonResponse({ ok: true, hasAssets: !!env.ASSETS, hasStaticContent: !!env.__STATIC_CONTENT });
+      return jsonResponse({
+        ok: true,
+        hasAssets: !!env.ASSETS,
+        hasStaticContent: !!env.__STATIC_CONTENT,
+        hasWompiTestSecret: !!env.WOMPI_INTEGRITY_SECRET_TEST,
+        hasWompiProdSecret: !!env.WOMPI_INTEGRITY_SECRET_PROD,
+        hasWompiFallbackSecret: !!env.WOMPI_INTEGRITY_SECRET,
+      });
     }
 
     // Preflight (si en el futuro llamas desde otro dominio)
