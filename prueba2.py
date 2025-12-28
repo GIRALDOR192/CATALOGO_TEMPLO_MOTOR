@@ -1189,6 +1189,12 @@ def generar_html_completo(productos, recursos, estadisticas):
             border-color: var(--primary);
         }}
 
+        .producto-card.deeplink-highlight {{
+            outline: 3px solid rgba(255, 0, 0, 0.70);
+            outline-offset: 2px;
+            box-shadow: 0 0 0 8px rgba(255, 0, 0, 0.14), var(--card-shadow);
+        }}
+
         .producto-badge {{
             position: absolute;
             top: 12px;
@@ -3185,6 +3191,8 @@ def generar_html_completo(productos, recursos, estadisticas):
             inicializarBotonesWhatsapp();
 
             manejarDeepLinkProducto();
+
+            window.addEventListener('hashchange', manejarDeepLinkProducto);
             
             // Mensaje de bienvenida en chat
             setTimeout(() => {{
@@ -3361,8 +3369,10 @@ def generar_html_completo(productos, recursos, estadisticas):
         let shareContext = {{ url: '', title: '', text: '' }};
 
         function construirUrlProducto(productoId) {{
-            const base = window.location.href.split('#')[0];
-            return `${{base}}#p-${{productoId}}`;
+            const u = new URL(window.location.href);
+            u.searchParams.set('p', String(productoId));
+            u.hash = `p-${{productoId}}`;
+            return u.toString();
         }}
 
         async function compartirProducto(productoId) {{
@@ -3433,14 +3443,23 @@ def generar_html_completo(productos, recursos, estadisticas):
         }}
 
         function manejarDeepLinkProducto() {{
+            const url = new URL(window.location.href);
             const hash = String(window.location.hash || '');
-            const match = hash.match(/^#p-(\\d+)$/);
-            if (!match) return;
-            const id = parseInt(match[1], 10);
+            const matchHash = hash.match(/^#p-(\\d+)$/);
+            const param = url.searchParams.get('p');
+            const matchParam = (param && /^\\d+$/.test(param)) ? parseInt(param, 10) : null;
+            const id = matchHash ? parseInt(matchHash[1], 10) : matchParam;
             if (!id) return;
 
             const producto = todosProductos.find(p => p.id === id);
             if (!producto) return;
+
+            // Normalizar URL para que siempre quede con hash (ayuda a copiar/reenviar)
+            const u2 = new URL(window.location.href);
+            if (String(u2.hash || '') !== `#p-${{id}}`) {{
+                u2.hash = `p-${{id}}`;
+                history.replaceState(null, '', u2.toString());
+            }}
 
             // Asegurar categoría correcta y limpiar filtros
             categoriaActual = String(producto.categoria || 'motos').toLowerCase() === 'carros' ? 'carros' : 'motos';
@@ -3451,17 +3470,31 @@ def generar_html_completo(productos, recursos, estadisticas):
             poblarFiltrosCategoria();
             aplicarFiltros();
 
-            setTimeout(() => {{
+            const navegarYEnfocar = () => {{
                 const idx = (productos || []).findIndex(p => p.id === id);
                 if (idx >= 0) {{
                     const pagina = Math.floor(idx / CONFIG_SISTEMA.PRODUCTOS_POR_PAGINA) + 1;
                     mostrarPagina(pagina);
                 }}
-                setTimeout(() => {{
+
+                // Reintentar hasta que la tarjeta exista (solo se renderiza en su página)
+                let intentos = 0;
+                const maxIntentos = 30;
+                const tick = () => {{
+                    intentos += 1;
                     const el = document.getElementById(`p-${{id}}`);
-                    if (el) el.scrollIntoView({{ behavior: 'smooth', block: 'center' }});
-                }}, 120);
-            }}, 60);
+                    if (el) {{
+                        el.scrollIntoView({{ behavior: 'smooth', block: 'center' }});
+                        el.classList.add('deeplink-highlight');
+                        setTimeout(() => el.classList.remove('deeplink-highlight'), 2200);
+                        return;
+                    }}
+                    if (intentos < maxIntentos) requestAnimationFrame(tick);
+                }};
+                requestAnimationFrame(tick);
+            }};
+
+            setTimeout(navegarYEnfocar, 90);
         }}
 
         // ==============================================
