@@ -9,6 +9,7 @@ import unicodedata
 import time
 import numpy as np
 import requests  # Añadir para usar Resend API
+import shutil
 
 # ==============================================
 # CONFIGURACIÓN PRINCIPAL ACTUALIZADA
@@ -3378,7 +3379,7 @@ def generar_html_completo(productos, recursos, estadisticas):
 
         function manejarDeepLinkProducto() {{
             const hash = String(window.location.hash || '');
-            const match = hash.match(/^#p-(\d+)$/);
+            const match = hash.match(/^#p-(\\d+)$/);
             if (!match) return;
             const id = parseInt(match[1], 10);
             if (!id) return;
@@ -4667,26 +4668,35 @@ def generar_catalogo_completo():
         print("\n📸 CARGANDO RECURSOS GRÁFICOS...")
         
         recursos = {}
-        imagenes_a_cargar = [
-            ("logo_templo", CONFIG["RUTAS"]["LOGO_TEMPLO"]),
-            ("logo_tiktok", CONFIG["RUTAS"]["LOGO_TIKTOK"]),
-            ("portada", CONFIG["RUTAS"]["PORTADA"]),
-            ("anuncio", CONFIG["RUTAS"]["ANUNCIO"])
-        ]
-        
-        for nombre, ruta in imagenes_a_cargar:
-            if os.path.exists(ruta):
-                print(f"   📁 {nombre}: Cargando...")
-                base64_img = convertir_imagen_a_base64(ruta)
-                if base64_img:
-                    recursos[nombre] = base64_img
-                    print(f"     ✅ Convertido a base64")
-                else:
-                    print(f"     ⚠️ No se pudo convertir")
-                    recursos[nombre] = generar_url_placeholder(nombre.replace('_', ' '), 400, 200)
+        # IMPORTANTE: Para Cloudflare Workers Assets, index.html debe ser <= 25 MiB.
+        # Evitamos embebir imágenes en base64 y en su lugar las copiamos a archivos estáticos.
+        assets_out = {
+            "logo_templo": (CONFIG["RUTAS"]["LOGO_TEMPLO"], "logo_templo.png"),
+            "logo_tiktok": (CONFIG["RUTAS"]["LOGO_TIKTOK"], "logo_tiktok.png"),
+            "portada": (CONFIG["RUTAS"]["PORTADA"], "portada.png"),
+            "anuncio": (CONFIG["RUTAS"]["ANUNCIO"], "anuncio.png"),
+        }
+
+        os.makedirs("public", exist_ok=True)
+
+        for nombre, (ruta_origen, nombre_archivo) in assets_out.items():
+            if os.path.exists(ruta_origen):
+                print(f"   📁 {nombre}: Copiando a assets...")
+                try:
+                    shutil.copyfile(ruta_origen, nombre_archivo)
+                    shutil.copyfile(ruta_origen, os.path.join("public", nombre_archivo))
+                    recursos[nombre] = nombre_archivo
+                    print("     ✅ Listo")
+                except Exception as e:
+                    print(f"     ⚠️ No se pudo copiar ({e}). Usando placeholder")
+                    recursos[nombre] = generar_url_placeholder(nombre.replace('_', ' '), 1200, 600)
             else:
-                print(f"   ❌ {nombre}: No encontrado en {ruta}")
-                recursos[nombre] = generar_url_placeholder(nombre.replace('_', ' '), 400, 200)
+                print(f"   ❌ {nombre}: No encontrado en {ruta_origen}")
+                # Para anuncio preferimos no mostrar nada si falta
+                if nombre == "anuncio":
+                    recursos[nombre] = ""
+                else:
+                    recursos[nombre] = generar_url_placeholder(nombre.replace('_', ' '), 1200, 600)
         
         # 2. CARGAR Y PROCESAR DATOS DEL EXCEL
         print("\n📊 CARGANDO DATOS DEL EXCEL...")
