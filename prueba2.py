@@ -21,7 +21,7 @@ CONFIG = {
     "WOMPI_PUBLIC_KEY_TEST": "pub_test_kxjpfDZfl7yubEFUsLa9j3j4An2zZFSL",
     "WOMPI_INTEGRITY_SECRET_TEST": "prv_test_SVZyC0Ytacjk5SIKJyUUrYrlw2qzfmc1",
     # Cambia a "test" si vas a usar sandbox
-    "WOMPI_MODO": "prod",
+    "WOMPI_MODO": "test",
     "RESEND_API_KEY": "re_bpJ7jUFu_8sP5DpVTfjsh1k8AFeL4m5Ji",  # API Key actualizada
     
     # Rutas de archivos
@@ -2163,6 +2163,7 @@ def generar_html_completo(productos, recursos, estadisticas):
             try {{
                 // Preferido: pedir firma al backend (Worker) para no exponer el secret.
                 const currency = 'COP';
+                const wompiModo = String(CONFIG_SISTEMA.WOMPI_MODO || '').toLowerCase();
 
                 const candidates = [
                     (CONFIG_SISTEMA.WOMPI_SIGNATURE_ENDPOINT || '').trim(),
@@ -2181,7 +2182,7 @@ def generar_html_completo(productos, recursos, estadisticas):
                         const resp = await fetch(endpoint, {{
                             method: 'POST',
                             headers: {{ 'Content-Type': 'application/json' }},
-                            body: JSON.stringify({{ reference: referencia, amountInCents: montoEnCentavos, currency }})
+                            body: JSON.stringify({{ reference: referencia, amountInCents: montoEnCentavos, currency, mode: wompiModo }})
                         }});
                         if (resp.ok) {{
                             const data = await resp.json();

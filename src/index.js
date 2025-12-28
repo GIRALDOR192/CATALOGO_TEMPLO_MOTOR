@@ -45,8 +45,12 @@ export default {
         return jsonResponse({ error: 'Method not allowed' }, 405, { 'access-control-allow-origin': '*' });
       }
 
-      const secret = env.WOMPI_INTEGRITY_SECRET;
-      if (!secret) {
+      // Soporta secretos separados por modo para evitar mezcla test/prod
+      // - WOMPI_INTEGRITY_SECRET_PROD
+      // - WOMPI_INTEGRITY_SECRET_TEST
+      // - WOMPI_INTEGRITY_SECRET (fallback)
+      const fallbackSecret = env.WOMPI_INTEGRITY_SECRET;
+      if (!fallbackSecret && !env.WOMPI_INTEGRITY_SECRET_PROD && !env.WOMPI_INTEGRITY_SECRET_TEST) {
         return jsonResponse(
           { error: 'Missing WOMPI_INTEGRITY_SECRET (configure as a secret in Cloudflare).' },
           500,
@@ -64,6 +68,7 @@ export default {
       const reference = String(payload?.reference ?? '').trim();
       const amountInCents = Number(payload?.amountInCents);
       const currency = String(payload?.currency ?? env.WOMPI_CURRENCY ?? 'COP').trim();
+      const mode = String(payload?.mode ?? '').trim().toLowerCase();
 
       if (!reference) {
         return jsonResponse({ error: 'reference is required' }, 400, { 'access-control-allow-origin': '*' });
@@ -73,6 +78,17 @@ export default {
       }
       if (!currency) {
         return jsonResponse({ error: 'currency is required' }, 400, { 'access-control-allow-origin': '*' });
+      }
+
+      let secret = fallbackSecret;
+      if (mode === 'prod') secret = env.WOMPI_INTEGRITY_SECRET_PROD || secret;
+      if (mode === 'test') secret = env.WOMPI_INTEGRITY_SECRET_TEST || secret;
+      if (!secret) {
+        return jsonResponse(
+          { error: 'No integrity secret configured for requested mode. Set WOMPI_INTEGRITY_SECRET_(PROD|TEST) or WOMPI_INTEGRITY_SECRET.' },
+          500,
+          { 'access-control-allow-origin': '*' }
+        );
       }
 
       const concatenated = `${reference}${Math.round(amountInCents)}${currency}${secret}`;
