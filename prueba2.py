@@ -2039,7 +2039,10 @@ def generar_html_completo(productos, recursos, estadisticas):
         /* Reestilo de tabs para look profesional */
         .tab-btn {{
             width: 100%;
-            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: flex-start;
             border-radius: 14px;
             padding: 12px 14px;
             border: 1px solid var(--border-color);
@@ -2048,6 +2051,26 @@ def generar_html_completo(productos, recursos, estadisticas):
             font-weight: 900;
             letter-spacing: 0.4px;
             transition: transform var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast);
+        }}
+
+        .tab-btn .tab-icon {{
+            width: 28px;
+            height: 28px;
+            display: grid;
+            place-items: center;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            background: rgba(255,255,255,0.02);
+            flex: 0 0 auto;
+        }}
+
+        .tab-btn .tab-icon i {{
+            font-size: 14px;
+        }}
+
+        .tab-btn .tab-label {{
+            min-width: 0;
+            flex: 1 1 auto;
         }}
 
         .tab-btn:hover {{
@@ -2060,6 +2083,73 @@ def generar_html_completo(productos, recursos, estadisticas):
             background: var(--gradient-primary);
             border-color: rgba(255,0,0,0.40);
             color: #fff;
+        }}
+
+        .tab-btn.active .tab-icon {{
+            border-color: rgba(255,255,255,0.22);
+            background: rgba(255,255,255,0.14);
+            animation: tabPop 220ms ease both;
+        }}
+
+        @keyframes tabPop {{
+            0% {{ transform: scale(0.90); }}
+            60% {{ transform: scale(1.08); }}
+            100% {{ transform: scale(1.00); }}
+        }}
+
+        /* Nudge del asistente (aparece después de unos segundos) */
+        .chat-action {{
+            position: relative;
+            display: inline-block;
+        }}
+
+        .chat-nudge {{
+            position: absolute;
+            right: 0;
+            top: calc(100% + 10px);
+            width: 240px;
+            padding: 12px 12px;
+            border-radius: 14px;
+            border: 1px solid var(--border-color);
+            background: rgba(0,0,0,0.72);
+            box-shadow: var(--card-shadow);
+            color: var(--text-primary);
+            display: none;
+        }}
+
+        [data-theme="light"] .chat-nudge {{
+            background: rgba(255,255,255,0.92);
+        }}
+
+        .chat-nudge.show {{
+            display: block;
+            animation: fadeUp 220ms ease both;
+        }}
+
+        .chat-nudge .nudge-title {{
+            font-weight: 1000;
+            letter-spacing: 0.2px;
+            font-size: 13px;
+        }}
+
+        .chat-nudge .nudge-text {{
+            margin-top: 4px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            line-height: 1.25;
+        }}
+
+        .chat-nudge .nudge-close {{
+            position: absolute;
+            top: 6px;
+            right: 8px;
+            border: 0;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 18px;
+            cursor: pointer;
+            line-height: 1;
         }}
 
         .categoria-badge {{
@@ -2235,7 +2325,7 @@ def generar_html_completo(productos, recursos, estadisticas):
             }}
 
             .tab-btn {{
-                text-align: center;
+                justify-content: center;
             }}
 
             .filters-row {{
@@ -2281,9 +2371,18 @@ def generar_html_completo(productos, recursos, estadisticas):
 
                 <!-- Tabs: MOTOS / CARROS / DESTACADOS -->
                 <div class="sidebar-tabs" role="tablist" aria-label="Secciones">
-                    <button class="tab-btn active" id="tabMotos" type="button" role="tab" aria-selected="true" data-cat="motos">MOTOS</button>
-                    <button class="tab-btn" id="tabCarros" type="button" role="tab" aria-selected="false" data-cat="carros">CARROS</button>
-                    <button class="tab-btn" id="tabDestacados" type="button" role="tab" aria-selected="false" data-view="destacados">DESTACADOS</button>
+                    <button class="tab-btn active" id="tabMotos" type="button" role="tab" aria-selected="true" data-cat="motos">
+                        <span class="tab-icon" aria-hidden="true"><i class="fas fa-motorcycle"></i></span>
+                        <span class="tab-label">MOTOS</span>
+                    </button>
+                    <button class="tab-btn" id="tabCarros" type="button" role="tab" aria-selected="false" data-cat="carros">
+                        <span class="tab-icon" aria-hidden="true"><i class="fas fa-car"></i></span>
+                        <span class="tab-label">CARROS</span>
+                    </button>
+                    <button class="tab-btn" id="tabDestacados" type="button" role="tab" aria-selected="false" data-view="destacados">
+                        <span class="tab-icon" aria-hidden="true"><i class="fas fa-star"></i></span>
+                        <span class="tab-label">DESTACADOS</span>
+                    </button>
                 </div>
 
                 <div class="categoria-badge" id="categoriaBadge">
@@ -2318,9 +2417,16 @@ def generar_html_completo(productos, recursos, estadisticas):
                             <i class="fas fa-shopping-cart"></i>
                             <span class="carrito-contador" id="carritoContador" style="display: none;">0</span>
                         </button>
-                        <button class="btn-chat-flotante" id="btnChatFlotante" title="Ayuda y asistencia" aria-label="Ayuda">
-                            <i class="fas fa-headset"></i>
-                        </button>
+                        <div class="chat-action" aria-label="Asistente">
+                            <button class="btn-chat-flotante" id="btnChatFlotante" title="Ayuda y asistencia" aria-label="Ayuda">
+                                <i class="fas fa-headset"></i>
+                            </button>
+                            <div class="chat-nudge" id="chatNudge" role="status" aria-live="polite">
+                                <button class="nudge-close" type="button" data-action="dismiss" aria-label="Cerrar">&times;</button>
+                                <div class="nudge-title">Asistente</div>
+                                <div class="nudge-text">¿Buscas una referencia o necesitas asesor? Toca aquí.</div>
+                            </div>
+                        </div>
                     </div>
                 </header>
 
@@ -2840,7 +2946,7 @@ def generar_html_completo(productos, recursos, estadisticas):
             const fin = Math.min(totalPaginas, inicio + 4);
             
             for (let i = inicio; i <= fin; i++) {{
-                html += `<button class="paginacion-btn ${{i === paginaActual ? 'active' : ''}}" onclick="mostrarPagina(${{i}})">${{i}}</button>`;
+                html += `<button class="paginacion-btn ${{i === paginaActual ? 'active' : ''}}" onclick="cambiarPagina(${{i}})">${{i}}</button>`;
             }}
             
             html += `<button class="paginacion-btn" onclick="cambiarPagina(${{paginaActual + 1}})" ${{paginaActual === totalPaginas ? 'disabled' : ''}}>
@@ -3058,6 +3164,31 @@ def generar_html_completo(productos, recursos, estadisticas):
             }}
             
             mostrarToast('Producto añadido al carrito', 'success');
+        }}
+
+        function asegurarProductoEnCarrito(productoId) {{
+            if (carrito.find(item => item.id === productoId)) return;
+            const producto = todosProductos.find(p => p.id === productoId);
+            if (!producto) return;
+            carrito.push({{
+                ...producto,
+                cantidad: 1
+            }});
+            guardarCarrito();
+            actualizarContadorCarrito();
+            actualizarCarritoModal();
+
+            // Actualizar el contador en el botón del producto
+            const productoCard = document.querySelector(`.producto-card[data-id="${{productoId}}"] .btn-carrito`);
+            if (productoCard) {{
+                let contadorSpan = productoCard.querySelector('.contador-carrito-mini');
+                if (!contadorSpan) {{
+                    contadorSpan = document.createElement('span');
+                    contadorSpan.className = 'contador-carrito-mini';
+                    productoCard.appendChild(contadorSpan);
+                }}
+                contadorSpan.textContent = '1';
+            }}
         }}
 
         function quitarDelCarrito(productoId) {{
@@ -3297,6 +3428,10 @@ def generar_html_completo(productos, recursos, estadisticas):
                 console.log('Configuración completa:', checkoutConfig);
                 
                 const checkout = new WidgetCheckout(checkoutConfig);
+
+                // El loader solo se usa para preparar el checkout. Al abrirlo, lo ocultamos
+                // para evitar que quede "pegado" si el usuario cierra/cancela el widget.
+                ocultarLoading();
                 
                 checkout.open(function(result) {{
                     console.log('Resultado de Wompi:', result);
@@ -3304,6 +3439,7 @@ def generar_html_completo(productos, recursos, estadisticas):
                     const transaction = result.transaction;
                     if (transaction && transaction.status === 'APPROVED') {{
                         console.log('✅ Transacción exitosa ID:', transaction.id);
+                        mostrarLoading();
                         finalizarCompra(producto, cliente, precioFinal, referencia, transaction);
                     }} else if (transaction && transaction.status === 'DECLINED') {{
                         mostrarToast('Pago rechazado. Intenta con otro método.', 'error');
@@ -3924,10 +4060,55 @@ def generar_html_completo(productos, recursos, estadisticas):
         }}
 
         function inicializarChat() {{
-            document.getElementById('btnChatFlotante').addEventListener('click', mostrarModalChat);
+            const btn = document.getElementById('btnChatFlotante');
+            if (btn) {{
+                btn.addEventListener('click', function() {{
+                    ocultarChatNudge(true);
+                    mostrarModalChat();
+                }});
+            }}
+            inicializarChatNudge();
             
             // Inicializar historial vacío
             chatHistory = [];
+        }}
+
+        function inicializarChatNudge() {{
+            const nudge = document.getElementById('chatNudge');
+            if (!nudge) return;
+            if (localStorage.getItem('chat_nudge_dismissed') === '1') return;
+
+            // Mostrar entre 10–15s (usamos 12s por defecto)
+            setTimeout(() => {{
+                const modal = document.getElementById('modalChat');
+                const isOpen = modal && modal.style.display === 'flex';
+                if (isOpen) return;
+                if (localStorage.getItem('chat_nudge_dismissed') === '1') return;
+                nudge.classList.add('show');
+
+                // Auto-ocultar para no estorbar
+                setTimeout(() => {{
+                    ocultarChatNudge(false);
+                }}, 10000);
+            }}, 12000);
+
+            nudge.addEventListener('click', function(e) {{
+                const dismissBtn = e.target.closest('[data-action="dismiss"]');
+                if (dismissBtn) {{
+                    e.preventDefault();
+                    ocultarChatNudge(true);
+                    return;
+                }}
+                ocultarChatNudge(true);
+                mostrarModalChat();
+            }});
+        }}
+
+        function ocultarChatNudge(dismiss) {{
+            const nudge = document.getElementById('chatNudge');
+            if (!nudge) return;
+            nudge.classList.remove('show');
+            if (dismiss) localStorage.setItem('chat_nudge_dismissed', '1');
         }}
 
         // ==============================================
@@ -4014,6 +4195,9 @@ def generar_html_completo(productos, recursos, estadisticas):
                 window.open(`https://wa.me/${{CONFIG_SISTEMA.WHATSAPP_NUMERO}}?text=${{encodeURIComponent(mensaje)}}`, '_blank');
                 return;
             }}
+
+            // Al comprar, también dejar el producto en el carrito (por si cancela Wompi)
+            asegurarProductoEnCarrito(productoSeleccionado.id);
             
             const resumen = document.getElementById('resumenCompra');
             const precioFinal = productoSeleccionado.precio_final;
