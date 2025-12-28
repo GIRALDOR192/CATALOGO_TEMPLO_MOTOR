@@ -410,6 +410,11 @@ def generar_html_completo(productos, recursos, estadisticas):
             --gradient-primary: linear-gradient(135deg, #FF0000 0%, #1a237e 100%);
             --gradient-secondary: linear-gradient(135deg, #1a237e 0%, #000000 100%);
             --gradient-protect: linear-gradient(135deg, #FF0000 0%, #FF9800 50%, #FF0000 100%);
+
+            --radius: 14px;
+            --radius-sm: 10px;
+            --transition-fast: 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
+            --transition-med: 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
             
             --bg-primary: #0a0a0a;
             --bg-secondary: #1a1a1a;
@@ -444,6 +449,19 @@ def generar_html_completo(productos, recursos, estadisticas):
             overflow-x: hidden;
             transition: background 0.3s, color 0.3s;
             padding-bottom: 100px;
+        }}
+
+        @media (prefers-reduced-motion: reduce) {{
+            * {{
+                animation: none !important;
+                transition: none !important;
+                scroll-behavior: auto !important;
+            }}
+        }}
+
+        @keyframes fadeUp {{
+            from {{ opacity: 0; transform: translateY(10px); }}
+            to {{ opacity: 1; transform: translateY(0); }}
         }}
 
         /* ===== PORTADA MEJORADA CON AJUSTE PARA COMPUTADOR ===== */
@@ -819,6 +837,27 @@ def generar_html_completo(productos, recursos, estadisticas):
             padding: 25px;
             max-width: 1500px;
             margin: 0 auto;
+        }}
+
+        .empty-state {{
+            grid-column: 1 / -1;
+            padding: 28px 18px;
+            border-radius: var(--radius);
+            border: 1px dashed var(--border-color);
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            text-align: center;
+            animation: fadeUp 220ms ease both;
+        }}
+
+        .empty-state h3 {{
+            color: var(--text-primary);
+            margin-bottom: 6px;
+            font-size: 18px;
+        }}
+
+        .empty-state p {{
+            margin: 0;
         }}
 
         /* MÓVIL - 2 columnas */
@@ -1801,6 +1840,101 @@ def generar_html_completo(productos, recursos, estadisticas):
         .mb-20 {{
             margin-bottom: 20px;
         }}
+
+        /* ===== SELECTOR MOTOS / CARROS ===== */
+        .categoria-tabs {{
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+        }}
+
+        [data-theme="light"] .categoria-tabs {{
+            background: rgba(255, 255, 255, 0.65);
+        }}
+
+        .categoria-tabs-inner {{
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }}
+
+        .tabs-pill {{
+            display: inline-flex;
+            gap: 6px;
+            padding: 6px;
+            border-radius: 999px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--card-shadow);
+        }}
+
+        .tab-btn {{
+            appearance: none;
+            border: 0;
+            background: transparent;
+            color: var(--text-secondary);
+            font-weight: 800;
+            letter-spacing: 0.4px;
+            padding: 10px 16px;
+            border-radius: 999px;
+            cursor: pointer;
+            transition: transform var(--transition-fast), background var(--transition-fast), color var(--transition-fast);
+        }}
+
+        .tab-btn:hover {{
+            transform: translateY(-1px);
+            color: var(--text-primary);
+        }}
+
+        .tab-btn.active {{
+            background: var(--gradient-primary);
+            color: #fff;
+        }}
+
+        .categoria-badge {{
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 13px;
+        }}
+
+        .categoria-badge .dot {{
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent);
+        }}
+
+        /* ===== MICRO-INTERACCIONES PROFESIONALES ===== */
+        .producto-card {{
+            border-radius: var(--radius);
+            transition: transform var(--transition-med), box-shadow var(--transition-med);
+            animation: fadeUp 220ms ease both;
+        }}
+
+        .producto-card:hover {{
+            transform: translateY(-4px);
+            box-shadow: 0 14px 30px rgba(0,0,0,0.35);
+        }}
+
+        .btn-comprar, .btn-carrito, .btn-toggle-modo, .btn-whatsapp-flotante, .btn-carrito-flotante, .btn-chat-flotante {{
+            transition: transform var(--transition-fast), filter var(--transition-fast);
+        }}
+
+        .btn-comprar:hover, .btn-carrito:hover, .btn-toggle-modo:hover, .btn-whatsapp-flotante:hover, .btn-carrito-flotante:hover, .btn-chat-flotante:hover {{
+            transform: translateY(-2px);
+            filter: brightness(1.06);
+        }}
     </style>
 </head>
 <body data-theme="dark">
@@ -1849,6 +1983,20 @@ def generar_html_completo(productos, recursos, estadisticas):
             
             <div class="protect-text">
                 🛡️ PROTEGEMOS TODAS TUS PARTES 🛡️
+            </div>
+        </div>
+    </section>
+
+    <!-- Selector de categoría: MOTOS / CARROS -->
+    <section class="categoria-tabs" aria-label="Categorías">
+        <div class="categoria-tabs-inner">
+            <div class="tabs-pill" role="tablist" aria-label="Motos y Carros">
+                <button class="tab-btn active" id="tabMotos" type="button" role="tab" aria-selected="true" data-cat="motos">MOTOS</button>
+                <button class="tab-btn" id="tabCarros" type="button" role="tab" aria-selected="false" data-cat="carros">CARROS</button>
+            </div>
+            <div class="categoria-badge" id="categoriaBadge">
+                <span class="dot"></span>
+                <span id="categoriaBadgeText">Mostrando: MOTOS</span>
             </div>
         </div>
     </section>
@@ -2056,6 +2204,9 @@ def generar_html_completo(productos, recursos, estadisticas):
         let estadoChat = 'inicio';
         let datosChatAsesor = {{}};
         let chatHistory = [];
+        let categoriaActual = 'motos';
+        let filtroMarcaEl = null;
+        let filtroTipoEl = null;
 
         // ==============================================
         // FUNCIONES DE UTILIDAD
@@ -2103,6 +2254,46 @@ def generar_html_completo(productos, recursos, estadisticas):
         function formatearPrecio(precio) {{
             if (precio <= 0) return 'Consultar';
             return `$${{Math.round(precio).toLocaleString('es-CO')}}`;
+        }}
+
+        // ==============================================
+        // CATEGORÍAS (MOTOS / CARROS)
+        // ==============================================
+        function setCategoria(cat) {{
+            const normalized = String(cat || '').toLowerCase() === 'carros' ? 'carros' : 'motos';
+            categoriaActual = normalized;
+
+            const tabMotos = document.getElementById('tabMotos');
+            const tabCarros = document.getElementById('tabCarros');
+            if (tabMotos && tabCarros) {{
+                const isMotos = categoriaActual === 'motos';
+                tabMotos.classList.toggle('active', isMotos);
+                tabCarros.classList.toggle('active', !isMotos);
+                tabMotos.setAttribute('aria-selected', isMotos ? 'true' : 'false');
+                tabCarros.setAttribute('aria-selected', !isMotos ? 'true' : 'false');
+            }}
+
+            const badgeText = document.getElementById('categoriaBadgeText');
+            if (badgeText) badgeText.textContent = `Mostrando: ${{categoriaActual.toUpperCase()}}`;
+
+            // Reset filtros al cambiar categoría
+            if (filtroMarcaEl) filtroMarcaEl.value = '';
+            if (filtroTipoEl) filtroTipoEl.value = '';
+            poblarFiltrosCategoria();
+            aplicarFiltros();
+        }}
+
+        function inicializarCategoriaTabs() {{
+            const tabMotos = document.getElementById('tabMotos');
+            const tabCarros = document.getElementById('tabCarros');
+            if (tabMotos) tabMotos.addEventListener('click', () => setCategoria('motos'));
+            if (tabCarros) tabCarros.addEventListener('click', () => setCategoria('carros'));
+            setCategoria('motos');
+        }}
+
+        function filtrarPorCategoria(lista) {{
+            const cat = categoriaActual;
+            return (lista || []).filter(p => String(p.categoria || 'motos').toLowerCase() === cat);
         }}
 
         // Búsqueda fuzzy para tolerancia a errores
@@ -2242,7 +2433,7 @@ def generar_html_completo(productos, recursos, estadisticas):
         // PAGINACIÓN
         // ==============================================
         function configurarPaginacion() {{
-            productos = [...todosProductos];
+            productos = [...filtrarPorCategoria(todosProductos)];
             totalPaginas = Math.ceil(productos.length / CONFIG_SISTEMA.PRODUCTOS_POR_PAGINA);
             mostrarPagina(1);
         }}
@@ -2303,6 +2494,7 @@ def generar_html_completo(productos, recursos, estadisticas):
             inicializarTema();
             inicializarCarrito();
             inicializarChat();
+            inicializarCategoriaTabs();
             configurarPaginacion();
             inicializarBuscador();
             inicializarFiltros();
@@ -2326,39 +2518,43 @@ def generar_html_completo(productos, recursos, estadisticas):
         }}
 
         function inicializarFiltros() {{
-            // Obtener marcas y tipos únicos
-            const marcas = [...new Set(todosProductos.map(p => p.marca).filter(m => m))];
-            const tipos = [...new Set(todosProductos.map(p => p.tipo).filter(t => t))];
-            
-            const filtroMarca = document.getElementById('filtroMarca');
-            const filtroTipo = document.getElementById('filtroTipo');
-            
-            // Llenar filtro de marcas
+            filtroMarcaEl = document.getElementById('filtroMarca');
+            filtroTipoEl = document.getElementById('filtroTipo');
+            poblarFiltrosCategoria();
+
+            // Event listeners para filtros
+            filtroMarcaEl.addEventListener('change', aplicarFiltros);
+            filtroTipoEl.addEventListener('change', aplicarFiltros);
+        }}
+
+        function poblarFiltrosCategoria() {{
+            if (!filtroMarcaEl || !filtroTipoEl) return;
+            const base = filtrarPorCategoria(todosProductos);
+            const marcas = [...new Set(base.map(p => p.marca).filter(m => m))];
+            const tipos = [...new Set(base.map(p => p.tipo).filter(t => t))];
+
+            filtroMarcaEl.innerHTML = '<option value="">Todas las marcas</option>';
+            filtroTipoEl.innerHTML = '<option value="">Todos los tipos</option>';
+
             marcas.sort().forEach(marca => {{
                 const option = document.createElement('option');
                 option.value = marca;
                 option.textContent = marca;
-                filtroMarca.appendChild(option);
+                filtroMarcaEl.appendChild(option);
             }});
-            
-            // Llenar filtro de tipos
             tipos.sort().forEach(tipo => {{
                 const option = document.createElement('option');
                 option.value = tipo;
                 option.textContent = tipo;
-                filtroTipo.appendChild(option);
+                filtroTipoEl.appendChild(option);
             }});
-            
-            // Event listeners para filtros
-            filtroMarca.addEventListener('change', aplicarFiltros);
-            filtroTipo.addEventListener('change', aplicarFiltros);
         }}
 
         function aplicarFiltros() {{
-            const marcaSeleccionada = document.getElementById('filtroMarca').value;
-            const tipoSeleccionado = document.getElementById('filtroTipo').value;
-            
-            let filtrados = todosProductos;
+            const marcaSeleccionada = (filtroMarcaEl ? filtroMarcaEl.value : document.getElementById('filtroMarca').value);
+            const tipoSeleccionado = (filtroTipoEl ? filtroTipoEl.value : document.getElementById('filtroTipo').value);
+
+            let filtrados = filtrarPorCategoria(todosProductos);
             
             if (marcaSeleccionada) {{
                 filtrados = filtrados.filter(p => p.marca === marcaSeleccionada);
@@ -2380,6 +2576,20 @@ def generar_html_completo(productos, recursos, estadisticas):
         function renderizarProductos(productosARenderizar) {{
             const grid = document.getElementById('productosGrid');
             grid.innerHTML = '';
+
+            if (!productosARenderizar || productosARenderizar.length === 0) {{
+                const titulo = categoriaActual === 'carros' ? 'CARROS' : 'MOTOS';
+                const mensaje = categoriaActual === 'carros'
+                    ? 'Aún no hay productos para CARROS. Esta sección estará disponible pronto.'
+                    : 'No hay productos para mostrar con estos filtros.';
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <h3><i class="fas fa-layer-group"></i> ${{titulo}}</h3>
+                        <p>${{mensaje}}</p>
+                    </div>
+                `;
+                return;
+            }}
             
             productosARenderizar.forEach(producto => {{
                 // Verificar si el producto ya está en el carrito
