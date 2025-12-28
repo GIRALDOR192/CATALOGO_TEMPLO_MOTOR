@@ -24,6 +24,10 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
+    if (url.pathname === '/health') {
+      return jsonResponse({ ok: true, hasAssets: !!env.ASSETS, hasStaticContent: !!env.__STATIC_CONTENT });
+    }
+
     // Preflight (si en el futuro llamas desde otro dominio)
     if (request.method === 'OPTIONS') {
       return new Response(null, {
@@ -93,6 +97,14 @@ export default {
       return env.ASSETS.fetch(request);
     }
 
-    return new Response('ASSETS binding not configured. Check wrangler.jsonc assets.directory.', { status: 500 });
+    // Fallback for some asset-binding modes
+    if (env.__STATIC_CONTENT) {
+      return new Response(
+        'Static content binding detected but ASSETS is not configured. Ensure you are using Wrangler assets.directory (wrangler.toml) and redeploy.',
+        { status: 500 }
+      );
+    }
+
+    return new Response('ASSETS binding not configured. Check wrangler.toml [assets] directory and redeploy.', { status: 500 });
   },
 };

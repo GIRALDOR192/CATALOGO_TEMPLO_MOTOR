@@ -375,6 +375,9 @@ def generar_html_completo(productos, recursos, estadisticas):
     wompi_public_key = CONFIG['WOMPI_PUBLIC_KEY_TEST'] if wompi_modo == 'test' else CONFIG['WOMPI_PUBLIC_KEY']
     wompi_integrity_secret = CONFIG['WOMPI_INTEGRITY_SECRET_TEST'] if wompi_modo == 'test' else CONFIG['WOMPI_INTEGRITY_SECRET']
     wompi_api_base = 'https://sandbox.wompi.co' if wompi_modo == 'test' else 'https://production.wompi.co'
+
+    # En modo test permitimos fallback local (solo para pruebas). En prod, NO se debe exponer el secret.
+    wompi_integrity_secret_frontend = wompi_integrity_secret if wompi_modo == 'test' else ''
     
     html = f'''<!DOCTYPE html>
 <html lang="es">
@@ -2020,8 +2023,9 @@ def generar_html_completo(productos, recursos, estadisticas):
         // ==============================================
         const CONFIG_SISTEMA = {{
             WOMPI_PUBLIC_KEY: "{wompi_public_key}",
-            // NO expongas el secret en frontend; se calcula en backend (Worker)
-            WOMPI_INTEGRITY_SECRET: "",
+            WOMPI_MODO: "{wompi_modo}",
+            // En test se permite fallback local; en prod se mantiene vacío.
+            WOMPI_INTEGRITY_SECRET: "{wompi_integrity_secret_frontend}",
             WOMPI_API_BASE: "{wompi_api_base}",
             WOMPI_SIGNATURE_ENDPOINT: "/api/wompi/signature",
             RESEND_API_KEY: "{CONFIG['RESEND_API_KEY']}",
@@ -2158,23 +2162,36 @@ def generar_html_completo(productos, recursos, estadisticas):
         async function generarFirmaIntegridad(referencia, montoEnCentavos) {{
             try {{
                 // Preferido: pedir firma al backend (Worker) para no exponer el secret.
-                const endpoint = CONFIG_SISTEMA.WOMPI_SIGNATURE_ENDPOINT || '/api/wompi/signature';
                 const currency = 'COP';
 
-                try {{
-                    const resp = await fetch(endpoint, {{
-                        method: 'POST',
-                        headers: {{ 'Content-Type': 'application/json' }},
-                        body: JSON.stringify({{ reference: referencia, amountInCents: montoEnCentavos, currency }})
-                    }});
-                    if (resp.ok) {{
-                        const data = await resp.json();
-                        if (data && data.integrity) {{
-                            return data.integrity;
+                const candidates = [
+                    (CONFIG_SISTEMA.WOMPI_SIGNATURE_ENDPOINT || '').trim(),
+                    `${{window.location.origin}}/api/wompi/signature`,
+                    'https://templogarage.com/api/wompi/signature'
+                ].filter(Boolean);
+
+                // Quitar duplicados manteniendo orden
+                const endpoints = [];
+                for (const c of candidates) {{
+                    if (!endpoints.includes(c)) endpoints.push(c);
+                }}
+
+                for (const endpoint of endpoints) {{
+                    try {{
+                        const resp = await fetch(endpoint, {{
+                            method: 'POST',
+                            headers: {{ 'Content-Type': 'application/json' }},
+                            body: JSON.stringify({{ reference: referencia, amountInCents: montoEnCentavos, currency }})
+                        }});
+                        if (resp.ok) {{
+                            const data = await resp.json();
+                            if (data && data.integrity) {{
+                                return data.integrity;
+                            }}
                         }}
+                    }} catch (e) {{
+                        // seguir probando otros endpoints
                     }}
-                }} catch (e) {{
-                    console.warn('No se pudo obtener firma desde backend, intentando modo local:', e);
                 }}
 
                 // Fallback local (solo si alguien decide embebir el secret; NO recomendado para producción)
@@ -2183,6 +2200,10 @@ def generar_html_completo(productos, recursos, estadisticas):
                 }}
                 const secret = String(CONFIG_SISTEMA.WOMPI_INTEGRITY_SECRET || '');
                 if (!secret || secret.length < 10) {{
+                    const modo = (CONFIG_SISTEMA.WOMPI_MODO || '').toLowerCase();
+                    if (modo === 'test') {{
+                        throw new Error('Firma no disponible: backend no responde. En test puedes embebir el secret o configurar el Worker.');
+                    }}
                     throw new Error('Firma no disponible: backend no responde y no hay secret local.');
                 }}
                 const cadenaConcatenada = `${{String(referencia)}}${{String(montoEnCentavos)}}${{currency}}${{secret}}`;
