@@ -37,6 +37,7 @@ CONFIG = {
         "LOGO_TEMPLO": r"C:\Users\Giral\OneDrive\Documentos\CATQALOGO MOTOS\logo\TEMPLO GARAGE STREET.png",
         "LOGO_TIKTOK": r"C:\Users\Giral\OneDrive\Documentos\CATQALOGO MOTOS\logo\LOGO TIKTOK.png",
         "PORTADA": r"C:\Users\Giral\OneDrive\Documentos\CATQALOGO MOTOS\logo\portada.png",
+        "ANUNCIO": r"C:\Users\Giral\OneDrive\Documentos\CATQALOGO MOTOS\logo\anuncio.png",
         "SALIDA": "catalogo_templo_garage_profesional.html"
     },
     
@@ -1002,6 +1003,144 @@ def generar_html_completo(productos, recursos, estadisticas):
             height: 100%;
             position: relative;
             overflow: hidden;
+        }}
+
+        /* Splash anuncio (medios de pago) */
+        .splash-overlay {{
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+            background: rgba(0,0,0,0.82);
+            backdrop-filter: blur(8px);
+        }}
+
+        [data-theme="light"] .splash-overlay {{
+            background: rgba(255,255,255,0.88);
+        }}
+
+        .splash-overlay.show {{
+            display: flex;
+            animation: fadeUp 180ms ease both;
+        }}
+
+        .splash-card {{
+            width: min(860px, 94vw);
+            max-height: 82vh;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            background: rgba(255,255,255,0.04);
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+        }}
+
+        [data-theme="light"] .splash-card {{
+            background: rgba(255,255,255,0.75);
+        }}
+
+        .splash-card img {{
+            display: block;
+            width: 100%;
+            height: auto;
+            max-height: 82vh;
+            object-fit: contain;
+        }}
+
+        /* Compartir producto */
+        .btn-compartir {{
+            flex: 1;
+            background: rgba(255,255,255,0.06);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }}
+
+        .btn-compartir:hover {{
+            transform: translateY(-2px);
+            border-color: rgba(26,35,126,0.55);
+            background: rgba(255,255,255,0.10);
+        }}
+
+        .modal-compartir {{
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(0,0,0,0.68);
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+        }}
+
+        [data-theme="light"] .modal-compartir {{
+            background: rgba(0,0,0,0.42);
+        }}
+
+        .modal-compartir .modal-share-content {{
+            width: min(520px, 94vw);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            box-shadow: var(--card-shadow);
+            padding: 18px;
+            position: relative;
+        }}
+
+        .share-title {{
+            font-weight: 1000;
+            letter-spacing: 0.2px;
+            margin: 0 0 8px;
+        }}
+
+        .share-subtitle {{
+            color: var(--text-secondary);
+            font-weight: 600;
+            margin: 0 0 14px;
+            font-size: 13px;
+        }}
+
+        .share-grid {{
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }}
+
+        .share-btn {{
+            width: 100%;
+            border: 1px solid var(--border-color);
+            background: rgba(255,255,255,0.04);
+            color: var(--text-primary);
+            border-radius: 12px;
+            padding: 12px 12px;
+            font-weight: 800;
+            letter-spacing: 0.2px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: transform var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast);
+        }}
+
+        .share-btn:hover {{
+            transform: translateY(-1px);
+            border-color: rgba(26,35,126,0.55);
+            background: rgba(255,255,255,0.08);
+        }}
+
+        @media (max-width: 520px) {{
+            .share-grid {{
+                grid-template-columns: 1fr;
+            }}
         }}
 
         .producto-card:hover {{
@@ -2348,6 +2487,13 @@ def generar_html_completo(productos, recursos, estadisticas):
         <div class="spinner"></div>
     </div>
 
+    <!-- Splash anuncio (medios de pago) -->
+    <div class="splash-overlay" id="splashOverlay" aria-hidden="true">
+        <div class="splash-card">
+            <img src="{recursos.get('anuncio', '')}" alt="Medios de pago disponibles">
+        </div>
+    </div>
+
         <!-- Layout profesional: sidebar + topbar + productos visibles desde el inicio -->
         <div class="app-shell" id="appShell">
             <!-- Sidebar izquierda con logos siempre visibles -->
@@ -2569,6 +2715,21 @@ def generar_html_completo(productos, recursos, estadisticas):
                         <i class="fas fa-paper-plane"></i>
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Compartir (principalmente para PC) -->
+    <div class="modal-compartir" id="modalCompartir">
+        <div class="modal-share-content">
+            <button class="modal-close" onclick="cerrarModalCompartir()">&times;</button>
+            <h3 class="share-title"><i class="fas fa-share-alt"></i> Compartir producto</h3>
+            <p class="share-subtitle" id="shareSubtitle">Elige una opción para compartir.</p>
+            <div class="share-grid">
+                <button class="share-btn" type="button" onclick="compartirWhatsApp()"><i class="fab fa-whatsapp"></i> WhatsApp</button>
+                <button class="share-btn" type="button" onclick="compartirFacebook()"><i class="fab fa-facebook"></i> Facebook</button>
+                <button class="share-btn" type="button" onclick="compartirX()"><i class="fab fa-x-twitter"></i> X</button>
+                <button class="share-btn" type="button" onclick="copiarLinkCompartir()"><i class="fas fa-link"></i> Copiar link</button>
             </div>
         </div>
     </div>
@@ -2971,6 +3132,7 @@ def generar_html_completo(productos, recursos, estadisticas):
         // INICIALIZACIÓN DEL SISTEMA
         // ==============================================
         document.addEventListener('DOMContentLoaded', function() {{
+            mostrarSplashAnuncio();
             cargarTransacciones();
             inicializarTema();
             inicializarCarrito();
@@ -2980,6 +3142,8 @@ def generar_html_completo(productos, recursos, estadisticas):
             inicializarBuscador();
             inicializarFiltros();
             inicializarBotonesWhatsapp();
+
+            manejarDeepLinkProducto();
             
             // Mensaje de bienvenida en chat
             setTimeout(() => {{
@@ -3084,6 +3248,7 @@ def generar_html_completo(productos, recursos, estadisticas):
                 const card = document.createElement('div');
                 card.className = 'producto-card';
                 card.dataset.id = producto.id;
+                card.id = `p-${{producto.id}}`;
                 card.innerHTML = `
                     ${{producto.precio > 0 && Math.random() > 0.7 ? '<div class="producto-badge oferta">OFERTA</div>' : ''}}
                     <div class="producto-imagen">
@@ -3109,12 +3274,138 @@ def generar_html_completo(productos, recursos, estadisticas):
                                 <i class="fas fa-cart-plus"></i>
                                 ${{cantidadEnCarrito > 0 ? `<span class="contador-carrito-mini">${{cantidadEnCarrito}}</span>` : ''}}
                             </button>
+                            <button class="btn-compartir" onclick="compartirProducto(${{producto.id}})" title="Compartir">
+                                <i class="fas fa-share-alt"></i>
+                            </button>
                         </div>
                     </div>
                 `;
                 
                 grid.appendChild(card);
             }});
+        }}
+
+        // ==============================================
+        // SPLASH INICIAL (ANUNCIO)
+        // ==============================================
+        function mostrarSplashAnuncio() {{
+            const overlay = document.getElementById('splashOverlay');
+            if (!overlay) return;
+            const img = overlay.querySelector('img');
+            if (!img || !img.getAttribute('src')) return;
+            overlay.classList.add('show');
+            setTimeout(() => {{
+                overlay.classList.remove('show');
+            }}, 2500);
+        }}
+
+        // ==============================================
+        // COMPARTIR PRODUCTO + DEEP LINK
+        // ==============================================
+        let shareContext = {{ url: '', title: '', text: '' }};
+
+        function construirUrlProducto(productoId) {{
+            const base = window.location.href.split('#')[0];
+            return `${{base}}#p-${{productoId}}`;
+        }}
+
+        async function compartirProducto(productoId) {{
+            const producto = todosProductos.find(p => p.id === productoId);
+            if (!producto) return;
+            const url = construirUrlProducto(productoId);
+            const title = String(producto.nombre || 'Producto');
+            const text = `Mira este producto: ${{producto.nombre}} (${{producto.marca}})`;
+
+            shareContext = {{ url, title, text }};
+            const subtitle = document.getElementById('shareSubtitle');
+            if (subtitle) subtitle.textContent = `${{producto.nombre}} • ${{producto.marca}}`;
+
+            // En celular: compartir nativo
+            if (navigator.share) {{
+                try {{
+                    await navigator.share({{ title, text, url }});
+                    return;
+                }} catch (e) {{
+                    // Cancelado o no soportado del todo -> modal
+                }}
+            }}
+            mostrarModalCompartir();
+        }}
+
+        function mostrarModalCompartir() {{
+            const modal = document.getElementById('modalCompartir');
+            if (!modal) return;
+            modal.style.display = 'flex';
+        }}
+
+        function cerrarModalCompartir() {{
+            const modal = document.getElementById('modalCompartir');
+            if (!modal) return;
+            modal.style.display = 'none';
+        }}
+
+        function compartirWhatsApp() {{
+            const msg = `${{shareContext.text}}\n${{shareContext.url}}`;
+            window.open(`https://wa.me/?text=${{encodeURIComponent(msg)}}`, '_blank');
+        }}
+
+        function compartirFacebook() {{
+            window.open(`https://www.facebook.com/sharer/sharer.php?u=${{encodeURIComponent(shareContext.url)}}`, '_blank');
+        }}
+
+        function compartirX() {{
+            const msg = `${{shareContext.text}}`;
+            window.open(`https://twitter.com/intent/tweet?text=${{encodeURIComponent(msg)}}&url=${{encodeURIComponent(shareContext.url)}}`, '_blank');
+        }}
+
+        async function copiarLinkCompartir() {{
+            try {{
+                if (navigator.clipboard && navigator.clipboard.writeText) {{
+                    await navigator.clipboard.writeText(shareContext.url);
+                }} else {{
+                    const tmp = document.createElement('input');
+                    tmp.value = shareContext.url;
+                    document.body.appendChild(tmp);
+                    tmp.select();
+                    document.execCommand('copy');
+                    tmp.remove();
+                }}
+                mostrarToast('Link copiado', 'success');
+            }} catch (e) {{
+                mostrarToast('No se pudo copiar el link', 'error');
+            }}
+        }}
+
+        function manejarDeepLinkProducto() {{
+            const hash = String(window.location.hash || '');
+            const match = hash.match(/^#p-(\d+)$/);
+            if (!match) return;
+            const id = parseInt(match[1], 10);
+            if (!id) return;
+
+            const producto = todosProductos.find(p => p.id === id);
+            if (!producto) return;
+
+            // Asegurar categoría correcta y limpiar filtros
+            categoriaActual = String(producto.categoria || 'motos').toLowerCase() === 'carros' ? 'carros' : 'motos';
+            vistaActual = 'catalogo';
+            actualizarTabsUI();
+            if (filtroMarcaEl) filtroMarcaEl.value = '';
+            if (filtroTipoEl) filtroTipoEl.value = '';
+            poblarFiltrosCategoria();
+            aplicarFiltros();
+
+            setTimeout(() => {{
+                const idx = (productos || []).findIndex(p => p.id === id);
+                if (idx >= 0) {{
+                    const pagina = Math.floor(idx / CONFIG_SISTEMA.PRODUCTOS_POR_PAGINA) + 1;
+                    mostrarPagina(pagina);
+                }}
+                setTimeout(() => {{
+                    const el = document.getElementById(`p-${{id}}`);
+                    if (el) el.scrollIntoView({{ behavior: 'smooth', block: 'center' }});
+                }}, 120);
+            }}, 60);
         }}
 
         // ==============================================
@@ -4347,6 +4638,12 @@ def generar_html_completo(productos, recursos, estadisticas):
                 cerrarModalChat();
             }}
         }});
+
+        document.getElementById('modalCompartir').addEventListener('click', function(e) {{
+            if (e.target === this) {{
+                cerrarModalCompartir();
+            }}
+        }});
     </script>
 </body>
 </html>'''
@@ -4373,7 +4670,8 @@ def generar_catalogo_completo():
         imagenes_a_cargar = [
             ("logo_templo", CONFIG["RUTAS"]["LOGO_TEMPLO"]),
             ("logo_tiktok", CONFIG["RUTAS"]["LOGO_TIKTOK"]),
-            ("portada", CONFIG["RUTAS"]["PORTADA"])
+            ("portada", CONFIG["RUTAS"]["PORTADA"]),
+            ("anuncio", CONFIG["RUTAS"]["ANUNCIO"])
         ]
         
         for nombre, ruta in imagenes_a_cargar:
