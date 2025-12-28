@@ -1935,6 +1935,321 @@ def generar_html_completo(productos, recursos, estadisticas):
             transform: translateY(-2px);
             filter: brightness(1.06);
         }}
+
+        /* =====================================================
+           DISEÑO 100% PROFESIONAL (LAYOUT V2)
+           Sidebar izquierda fija + Topbar superior + productos visibles
+           ===================================================== */
+        body {{
+            padding-bottom: 0;
+        }}
+
+        .app-shell {{
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            background: radial-gradient(1200px 400px at 10% -10%, rgba(255,0,0,0.16), transparent 60%),
+                        radial-gradient(900px 420px at 95% 0%, rgba(26,35,126,0.20), transparent 55%),
+                        var(--bg-primary);
+        }}
+
+        .app-sidebar {{
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            padding: 18px 16px;
+            border-right: 1px solid var(--border-color);
+            background: linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.00) 70%);
+            overflow: hidden;
+        }}
+
+        .sidebar-brand {{
+            display: grid;
+            gap: 12px;
+            margin-bottom: 16px;
+        }}
+
+        .brand-card {{
+            display: grid;
+            grid-template-columns: 52px 1fr;
+            gap: 12px;
+            align-items: center;
+            padding: 12px 12px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            background: rgba(255,255,255,0.03);
+            text-decoration: none;
+            color: var(--text-primary);
+            box-shadow: var(--card-shadow);
+            transition: transform var(--transition-med), border-color var(--transition-med), background var(--transition-med);
+        }}
+
+        [data-theme="light"] .brand-card {{
+            background: rgba(0,0,0,0.02);
+        }}
+
+        .brand-card:hover {{
+            transform: translateY(-2px);
+            border-color: rgba(255, 0, 0, 0.45);
+            background: rgba(255,255,255,0.05);
+        }}
+
+        .brand-img {{
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            object-fit: contain;
+            background: rgba(0,0,0,0.25);
+            border: 1px solid rgba(255,255,255,0.06);
+        }}
+
+        [data-theme="light"] .brand-img {{
+            background: rgba(255,255,255,0.8);
+            border-color: rgba(0,0,0,0.06);
+        }}
+
+        .brand-text {{
+            display: grid;
+            gap: 2px;
+            min-width: 0;
+        }}
+
+        .brand-title {{
+            font-weight: 900;
+            letter-spacing: 0.3px;
+            font-size: 14px;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }}
+
+        .brand-sub {{
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 600;
+        }}
+
+        .sidebar-tabs {{
+            display: grid;
+            gap: 10px;
+            margin: 14px 0 12px;
+        }}
+
+        /* Reestilo de tabs para look profesional */
+        .tab-btn {{
+            width: 100%;
+            text-align: left;
+            border-radius: 14px;
+            padding: 12px 14px;
+            border: 1px solid var(--border-color);
+            background: rgba(255,255,255,0.02);
+            color: var(--text-primary);
+            font-weight: 900;
+            letter-spacing: 0.4px;
+            transition: transform var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast);
+        }}
+
+        .tab-btn:hover {{
+            transform: translateY(-1px);
+            border-color: rgba(26,35,126,0.55);
+            background: rgba(255,255,255,0.04);
+        }}
+
+        .tab-btn.active {{
+            background: var(--gradient-primary);
+            border-color: rgba(255,0,0,0.40);
+            color: #fff;
+        }}
+
+        .categoria-badge {{
+            justify-content: flex-start;
+            padding: 10px 12px;
+            border-radius: 14px;
+            border: 1px solid var(--border-color);
+            background: rgba(255,255,255,0.02);
+        }}
+
+        .app-main {{
+            min-width: 0;
+            display: grid;
+            grid-template-rows: auto auto auto 1fr;
+        }}
+
+        .topbar {{
+            position: sticky;
+            top: 0;
+            z-index: 60;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 12px;
+            align-items: center;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(0, 0, 0, 0.40);
+            backdrop-filter: blur(14px);
+        }}
+
+        [data-theme="light"] .topbar {{
+            background: rgba(255, 255, 255, 0.72);
+        }}
+
+        .topbar-search {{
+            min-width: 0;
+        }}
+
+        .topbar-buscador {{
+            max-width: 900px;
+            margin: 0;
+        }}
+
+        .topbar-actions {{
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }}
+
+        /* Desactiva el comportamiento flotante de los botones en este layout */
+        .topbar-actions .btn-toggle-modo,
+        .topbar-actions .btn-whatsapp-flotante,
+        .topbar-actions .btn-carrito-flotante,
+        .topbar-actions .btn-chat-flotante {{
+            position: relative !important;
+            right: auto !important;
+            bottom: auto !important;
+            left: auto !important;
+            top: auto !important;
+            width: 46px;
+            height: 46px;
+            border-radius: 14px;
+            box-shadow: none;
+            border: 1px solid var(--border-color);
+            background: rgba(255,255,255,0.03);
+        }}
+
+        .topbar-actions .btn-whatsapp-flotante {{
+            background: rgba(37, 211, 102, 0.12);
+            border-color: rgba(37, 211, 102, 0.32);
+        }}
+
+        .topbar-actions .btn-carrito-flotante {{
+            background: rgba(255, 0, 0, 0.10);
+            border-color: rgba(255, 0, 0, 0.22);
+        }}
+
+        .hero-panel {{
+            position: relative;
+            margin: 16px 16px 10px;
+            border-radius: calc(var(--radius) + 6px);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            background: linear-gradient(135deg, rgba(255,0,0,0.10), rgba(26,35,126,0.16));
+            min-height: 148px;
+        }}
+
+        .hero-bg {{
+            position: absolute;
+            inset: 0;
+            background-position: center;
+            background-size: cover;
+            filter: saturate(1.05) contrast(1.05);
+            opacity: 0.22;
+            transform: scale(1.03);
+        }}
+
+        [data-theme="light"] .hero-bg {{
+            opacity: 0.14;
+        }}
+
+        .hero-inner {{
+            position: relative;
+            padding: 18px 18px;
+            display: grid;
+            gap: 8px;
+        }}
+
+        .hero-title {{
+            font-size: 22px;
+            line-height: 1.18;
+            font-weight: 1000;
+            letter-spacing: 0.2px;
+        }}
+
+        .hero-subtitle {{
+            color: var(--text-secondary);
+            font-weight: 600;
+            margin: 0;
+        }}
+
+        .hero-chip {{
+            display: inline-flex;
+            width: fit-content;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(0,0,0,0.45);
+            border: 1px solid rgba(255,255,255,0.10);
+            font-weight: 900;
+            letter-spacing: 0.4px;
+            font-size: 12px;
+        }}
+
+        [data-theme="light"] .hero-chip {{
+            background: rgba(255,255,255,0.78);
+            border-color: rgba(0,0,0,0.08);
+        }}
+
+        .filters-row {{
+            margin: 0 16px 10px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }}
+
+        .filters-row .filtro-select {{
+            width: 100%;
+        }}
+
+        .content-area {{
+            padding: 6px 16px 20px;
+        }}
+
+        .content-area .productos-grid {{
+            margin-top: 0;
+        }}
+
+        /* Responsive: sidebar pasa arriba en móvil */
+        @media (max-width: 980px) {{
+            .app-shell {{
+                grid-template-columns: 1fr;
+            }}
+
+            .app-sidebar {{
+                position: relative;
+                height: auto;
+                border-right: 0;
+                border-bottom: 1px solid var(--border-color);
+            }}
+
+            .sidebar-tabs {{
+                grid-template-columns: 1fr 1fr 1fr;
+            }}
+
+            .tab-btn {{
+                text-align: center;
+            }}
+
+            .filters-row {{
+                grid-template-columns: 1fr;
+            }}
+
+            .topbar {{
+                grid-template-columns: 1fr;
+            }}
+
+            .topbar-actions {{
+                justify-content: flex-end;
+            }}
+        }}
     </style>
 </head>
 <body data-theme="dark">
@@ -1943,95 +2258,101 @@ def generar_html_completo(productos, recursos, estadisticas):
         <div class="spinner"></div>
     </div>
 
-    <!-- Controles Superiores -->
-    <div class="controles-superiores">
-        <button class="btn-toggle-modo" id="btnToggleModo" title="Cambiar tema">
-            <i class="fas fa-moon"></i>
-        </button>
-        
-        <button class="btn-whatsapp-flotante" id="btnWhatsappFlotante" title="Contactar por WhatsApp">
-            <i class="fab fa-whatsapp"></i>
-        </button>
-        
-        <button class="btn-carrito-flotante" id="btnCarritoFlotante" title="Ver carrito">
-            <i class="fas fa-shopping-cart"></i>
-            <span class="carrito-contador" id="carritoContador" style="display: none;">0</span>
-        </button>
-    </div>
+        <!-- Layout profesional: sidebar + topbar + productos visibles desde el inicio -->
+        <div class="app-shell" id="appShell">
+            <!-- Sidebar izquierda con logos siempre visibles -->
+            <aside class="app-sidebar" aria-label="Marcas y navegación">
+                <div class="sidebar-brand">
+                    <a href="https://www.tiktok.com/@naturista_venuz" target="_blank" class="brand-card brand-templo" aria-label="Templo Garage Street (TikTok)">
+                        <img id="logoTemplo" src="{recursos['logo_templo']}" alt="Templo Garage" class="brand-img">
+                        <div class="brand-text">
+                            <div class="brand-title">Templo Garage Street</div>
+                            <div class="brand-sub">Repuestos • Envíos Colombia</div>
+                        </div>
+                    </a>
+                    <a href="https://www.tiktok.com/@brujablanca51" target="_blank" class="brand-card brand-tiktok" aria-label="TikTok Moto Parts (TikTok)">
+                        <img id="logoTiktok" src="{recursos['logo_tiktok']}" alt="TikTok Moto Parts" class="brand-img">
+                        <div class="brand-text">
+                            <div class="brand-title">TikTok Moto Parts</div>
+                            <div class="brand-sub">Novedades • Promos</div>
+                        </div>
+                    </a>
+                </div>
 
-    <!-- Botón flotante para chat minimalista -->
-    <button class="btn-chat-flotante" id="btnChatFlotante" title="Ayuda y asistencia">
-        <i class="fas fa-headset"></i>
-    </button>
+                <!-- Tabs: MOTOS / CARROS / DESTACADOS -->
+                <div class="sidebar-tabs" role="tablist" aria-label="Secciones">
+                    <button class="tab-btn active" id="tabMotos" type="button" role="tab" aria-selected="true" data-cat="motos">MOTOS</button>
+                    <button class="tab-btn" id="tabCarros" type="button" role="tab" aria-selected="false" data-cat="carros">CARROS</button>
+                    <button class="tab-btn" id="tabDestacados" type="button" role="tab" aria-selected="false" data-view="destacados">DESTACADOS</button>
+                </div>
 
-    <!-- Portada Mejorada -->
-    <section class="portada">
-        <div class="portada-content">
-            <div class="logos-container">
-                <a href="https://www.tiktok.com/@naturista_venuz" target="_blank" class="logo-wrapper logo-templo">
-                    <img id="logoTemplo" src="{recursos['logo_templo']}" alt="Templo Garage" class="logo-img">
-                    <div class="logo-label">Templo Garage Street</div>
-                </a>
-                <a href="https://www.tiktok.com/@brujablanca51" target="_blank" class="logo-wrapper logo-tiktok">
-                    <img id="logoTiktok" src="{recursos['logo_tiktok']}" alt="TikTok Moto Parts" class="logo-img">
-                    <div class="logo-label">TikTok Moto Parts</div>
-                </a>
-            </div>
-            
-            <h1 class="main-title">CATÁLOGO PROFESIONAL DE REPUESTOS</h1>
-            <p class="subtitle">Todo para tu moto en un solo lugar. Envíos a todo Colombia. Pago seguro con Wompi.</p>
-            
-            <div class="protect-text">
-                🛡️ PROTEGEMOS TODAS TUS PARTES 🛡️
+                <div class="categoria-badge" id="categoriaBadge">
+                    <span class="dot"></span>
+                    <span id="categoriaBadgeText">Mostrando: MOTOS</span>
+                </div>
+            </aside>
+
+            <!-- Contenido principal -->
+            <div class="app-main">
+                <!-- Barra superior fija con acciones -->
+                <header class="topbar" aria-label="Barra superior">
+                    <div class="topbar-search" aria-label="Buscar">
+                        <div class="buscador-container topbar-buscador">
+                            <i class="fas fa-search"></i>
+                            <input type="text" 
+                                   id="buscadorPrincipal" 
+                                   placeholder="Buscar por marca, producto o referencia…"
+                                   autocomplete="off">
+                            <div class="sugerencias" id="sugerenciasBusqueda"></div>
+                        </div>
+                    </div>
+
+                    <div class="topbar-actions" aria-label="Acciones">
+                        <button class="btn-toggle-modo" id="btnToggleModo" title="Cambiar tema" aria-label="Cambiar tema">
+                            <i class="fas fa-moon"></i>
+                        </button>
+                        <button class="btn-whatsapp-flotante" id="btnWhatsappFlotante" title="Contactar por WhatsApp" aria-label="WhatsApp">
+                            <i class="fab fa-whatsapp"></i>
+                        </button>
+                        <button class="btn-carrito-flotante" id="btnCarritoFlotante" title="Ver carrito" aria-label="Carrito">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span class="carrito-contador" id="carritoContador" style="display: none;">0</span>
+                        </button>
+                        <button class="btn-chat-flotante" id="btnChatFlotante" title="Ayuda y asistencia" aria-label="Ayuda">
+                            <i class="fas fa-headset"></i>
+                        </button>
+                    </div>
+                </header>
+
+                <!-- Portada compacta: no bloquea la vista del catálogo -->
+                <section class="hero-panel" aria-label="Portada">
+                    <div class="hero-bg" style="background-image: url('{recursos['portada']}');"></div>
+                    <div class="hero-inner">
+                        <h1 class="hero-title">Catálogo profesional de repuestos</h1>
+                        <p class="hero-subtitle">Compra rápida, pago seguro con Wompi y soporte por WhatsApp.</p>
+                        <div class="hero-chip">🛡️ PROTEGEMOS TODAS TUS PARTES</div>
+                    </div>
+                </section>
+
+                <!-- Filtros siempre visibles y cerca de los productos -->
+                <section class="filters-row" aria-label="Filtros">
+                    <select id="filtroMarca" class="filtro-select" aria-label="Filtrar por marca">
+                        <option value="">Todas las marcas</option>
+                    </select>
+                    <select id="filtroTipo" class="filtro-select" aria-label="Filtrar por tipo">
+                        <option value="">Todos los tipos</option>
+                    </select>
+                </section>
+
+                <main class="content-area" aria-label="Productos">
+                    <!-- Grid de Productos -->
+                    <div class="productos-grid" id="productosGrid"></div>
+
+                    <!-- Paginación -->
+                    <div class="paginacion" id="paginacion"></div>
+                </main>
             </div>
         </div>
-    </section>
-
-    <!-- Selector de categoría: MOTOS / CARROS -->
-    <section class="categoria-tabs" aria-label="Categorías">
-        <div class="categoria-tabs-inner">
-            <div class="tabs-pill" role="tablist" aria-label="Motos y Carros">
-                <button class="tab-btn active" id="tabMotos" type="button" role="tab" aria-selected="true" data-cat="motos">MOTOS</button>
-                <button class="tab-btn" id="tabCarros" type="button" role="tab" aria-selected="false" data-cat="carros">CARROS</button>
-            </div>
-            <div class="categoria-badge" id="categoriaBadge">
-                <span class="dot"></span>
-                <span id="categoriaBadgeText">Mostrando: MOTOS</span>
-            </div>
-        </div>
-    </section>
-
-    <!-- Buscador Avanzado -->
-    <section class="buscador-avanzado">
-        <div class="buscador-container">
-            <i class="fas fa-search"></i>
-            <input type="text" 
-                   id="buscadorPrincipal" 
-                   placeholder="Busca por marca, producto o referencia... (escribe aunque sea mal escrito)"
-                   autocomplete="off">
-            <div class="sugerencias" id="sugerenciasBusqueda"></div>
-        </div>
-        
-        <div class="filtros-desplegables">
-            <select id="filtroMarca" class="filtro-select">
-                <option value="">Todas las marcas</option>
-            </select>
-            
-            <select id="filtroTipo" class="filtro-select">
-                <option value="">Todos los tipos</option>
-            </select>
-        </div>
-    </section>
-
-    <!-- Grid de Productos -->
-    <div class="productos-grid" id="productosGrid">
-        <!-- Los productos se cargan aquí dinámicamente -->
-    </div>
-
-    <!-- Paginación -->
-    <div class="paginacion" id="paginacion">
-        <!-- Se genera dinámicamente -->
-    </div>
 
     <!-- Modal de Compra -->
     <div class="modal-compra" id="modalCompra">
@@ -2205,6 +2526,7 @@ def generar_html_completo(productos, recursos, estadisticas):
         let datosChatAsesor = {{}};
         let chatHistory = [];
         let categoriaActual = 'motos';
+        let vistaActual = 'catalogo'; // 'catalogo' | 'destacados'
         let filtroMarcaEl = null;
         let filtroTipoEl = null;
 
@@ -2257,24 +2579,46 @@ def generar_html_completo(productos, recursos, estadisticas):
         }}
 
         // ==============================================
-        // CATEGORÍAS (MOTOS / CARROS)
+        // SECCIONES (MOTOS / CARROS / DESTACADOS)
         // ==============================================
-        function setCategoria(cat) {{
-            const normalized = String(cat || '').toLowerCase() === 'carros' ? 'carros' : 'motos';
-            categoriaActual = normalized;
-
+        function actualizarTabsUI() {{
             const tabMotos = document.getElementById('tabMotos');
             const tabCarros = document.getElementById('tabCarros');
-            if (tabMotos && tabCarros) {{
-                const isMotos = categoriaActual === 'motos';
+            const tabDestacados = document.getElementById('tabDestacados');
+
+            const isDestacados = vistaActual === 'destacados';
+            const isMotos = !isDestacados && categoriaActual === 'motos';
+            const isCarros = !isDestacados && categoriaActual === 'carros';
+
+            if (tabMotos) {{
                 tabMotos.classList.toggle('active', isMotos);
-                tabCarros.classList.toggle('active', !isMotos);
                 tabMotos.setAttribute('aria-selected', isMotos ? 'true' : 'false');
-                tabCarros.setAttribute('aria-selected', !isMotos ? 'true' : 'false');
+            }}
+            if (tabCarros) {{
+                tabCarros.classList.toggle('active', isCarros);
+                tabCarros.setAttribute('aria-selected', isCarros ? 'true' : 'false');
+            }}
+            if (tabDestacados) {{
+                tabDestacados.classList.toggle('active', isDestacados);
+                tabDestacados.setAttribute('aria-selected', isDestacados ? 'true' : 'false');
             }}
 
             const badgeText = document.getElementById('categoriaBadgeText');
-            if (badgeText) badgeText.textContent = `Mostrando: ${{categoriaActual.toUpperCase()}}`;
+            if (badgeText) {{
+                const catLabel = String(categoriaActual || '').toUpperCase();
+                if (vistaActual === 'destacados') {{
+                    badgeText.textContent = 'Mostrando: DESTACADOS (' + catLabel + ')';
+                }} else {{
+                    badgeText.textContent = 'Mostrando: ' + catLabel;
+                }}
+            }}
+        }}
+
+        function setCategoria(cat) {{
+            const normalized = String(cat || '').toLowerCase() === 'carros' ? 'carros' : 'motos';
+            categoriaActual = normalized;
+            vistaActual = 'catalogo';
+            actualizarTabsUI();
 
             // Reset filtros al cambiar categoría
             if (filtroMarcaEl) filtroMarcaEl.value = '';
@@ -2283,17 +2627,48 @@ def generar_html_completo(productos, recursos, estadisticas):
             aplicarFiltros();
         }}
 
+        function setDestacados() {{
+            vistaActual = 'destacados';
+            // Mantener categoría actual (motos/carros)
+            actualizarTabsUI();
+            aplicarFiltros();
+        }}
+
         function inicializarCategoriaTabs() {{
             const tabMotos = document.getElementById('tabMotos');
             const tabCarros = document.getElementById('tabCarros');
+            const tabDestacados = document.getElementById('tabDestacados');
             if (tabMotos) tabMotos.addEventListener('click', () => setCategoria('motos'));
             if (tabCarros) tabCarros.addEventListener('click', () => setCategoria('carros'));
+            if (tabDestacados) tabDestacados.addEventListener('click', () => setDestacados());
             setCategoria('motos');
         }}
 
         function filtrarPorCategoria(lista) {{
             const cat = categoriaActual;
             return (lista || []).filter(p => String(p.categoria || 'motos').toLowerCase() === cat);
+        }}
+
+        function obtenerDestacados(lista) {{
+            const arr = Array.isArray(lista) ? [...lista] : [];
+            // Regla simple (ajustable después): rating desc, comentarios desc, precio_final desc
+            arr.sort((a, b) => {{
+                const ra = Number(a.rating || 0);
+                const rb = Number(b.rating || 0);
+                if (rb !== ra) return rb - ra;
+                const ca = Number(a.comentarios || 0);
+                const cb = Number(b.comentarios || 0);
+                if (cb !== ca) return cb - ca;
+                const pa = Number(a.precio_final || a.precio || 0);
+                const pb = Number(b.precio_final || b.precio || 0);
+                return pb - pa;
+            }});
+            return arr.slice(0, 60);
+        }}
+
+        function aplicarVista(lista) {{
+            if (vistaActual !== 'destacados') return lista;
+            return obtenerDestacados(lista);
         }}
 
         // Búsqueda fuzzy para tolerancia a errores
@@ -2433,7 +2808,7 @@ def generar_html_completo(productos, recursos, estadisticas):
         // PAGINACIÓN
         // ==============================================
         function configurarPaginacion() {{
-            productos = [...filtrarPorCategoria(todosProductos)];
+            productos = [...aplicarVista(filtrarPorCategoria(todosProductos))];
             totalPaginas = Math.ceil(productos.length / CONFIG_SISTEMA.PRODUCTOS_POR_PAGINA);
             mostrarPagina(1);
         }}
@@ -2563,6 +2938,8 @@ def generar_html_completo(productos, recursos, estadisticas):
             if (tipoSeleccionado) {{
                 filtrados = filtrados.filter(p => p.tipo === tipoSeleccionado);
             }}
+
+            filtrados = aplicarVista(filtrados);
             
             productos = filtrados;
             totalPaginas = Math.ceil(productos.length / CONFIG_SISTEMA.PRODUCTOS_POR_PAGINA);
@@ -2579,9 +2956,11 @@ def generar_html_completo(productos, recursos, estadisticas):
 
             if (!productosARenderizar || productosARenderizar.length === 0) {{
                 const titulo = categoriaActual === 'carros' ? 'CARROS' : 'MOTOS';
-                const mensaje = categoriaActual === 'carros'
-                    ? 'Aún no hay productos para CARROS. Esta sección estará disponible pronto.'
-                    : 'No hay productos para mostrar con estos filtros.';
+                const mensaje = (vistaActual === 'destacados')
+                    ? 'Aún no hay productos DESTACADOS para mostrar con estos filtros.'
+                    : (categoriaActual === 'carros'
+                        ? 'Aún no hay productos para CARROS. Esta sección estará disponible pronto.'
+                        : 'No hay productos para mostrar con estos filtros.');
                 grid.innerHTML = `
                     <div class="empty-state">
                         <h3><i class="fas fa-layer-group"></i> ${{titulo}}</h3>
