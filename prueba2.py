@@ -23,6 +23,11 @@ CONFIG = {
     "WOMPI_INTEGRITY_SECRET_TEST": os.getenv("WOMPI_INTEGRITY_SECRET_TEST", ""),
     # Cambia a "test" si vas a usar sandbox
     "WOMPI_MODO": "test",
+    # URL pública del Worker (para firmar incluso si abres el HTML desde file:// o GitHub Pages)
+    "WORKER_PUBLIC_BASE_URL": os.getenv(
+        "WORKER_PUBLIC_BASE_URL",
+        "https://catalogo-templo-motor.giraldor192.workers.dev"
+    ),
     # No embebas esta API key en el HTML (se expone públicamente). Configúrala por env para uso backend.
     "RESEND_API_KEY": os.getenv("RESEND_API_KEY", ""),
     
@@ -2028,7 +2033,7 @@ def generar_html_completo(productos, recursos, estadisticas):
             // Nunca exponer secretos en el frontend.
             WOMPI_INTEGRITY_SECRET: "{wompi_integrity_secret_frontend}",
             WOMPI_API_BASE: "{wompi_api_base}",
-            WOMPI_SIGNATURE_ENDPOINT: "/api/wompi/signature",
+            WOMPI_SIGNATURE_ENDPOINT: "{CONFIG['WORKER_PUBLIC_BASE_URL'].rstrip('/')}/api/wompi/signature",
             // No embebas la API key de Resend en HTML público.
             RESEND_API_KEY: "",
             WHATSAPP_NUMERO: "{CONFIG['CONTACTO']['WHATSAPP']}",
@@ -2170,7 +2175,8 @@ def generar_html_completo(productos, recursos, estadisticas):
                 const candidates = [
                     (CONFIG_SISTEMA.WOMPI_SIGNATURE_ENDPOINT || '').trim(),
                     `${{window.location.origin}}/api/wompi/signature`,
-                    'https://templogarage.com/api/wompi/signature'
+                    'https://templogarage.com/api/wompi/signature',
+                    'https://catalogo-templo-motor.giraldor192.workers.dev/api/wompi/signature'
                 ].filter(Boolean);
 
                 // Quitar duplicados manteniendo orden
@@ -2179,6 +2185,8 @@ def generar_html_completo(productos, recursos, estadisticas):
                     if (!endpoints.includes(c)) endpoints.push(c);
                 }}
 
+                let lastBackendError = '';
+
                 for (const endpoint of endpoints) {{
                     try {{
                         const resp = await fetch(endpoint, {{
@@ -2186,12 +2194,9 @@ def generar_html_completo(productos, recursos, estadisticas):
                             headers: {{ 'Content-Type': 'application/json' }},
                             body: JSON.stringify({{ reference: referencia, amountInCents: montoEnCentavos, currency, mode: wompiModo }})
                         }});
-                        if (resp.ok) {{
-                            const data = await resp.json();
-                            if (data && data.integrity) {{
-                                return data.integrity;
-                            }}
-                        }}
+                        const data = await resp.json().catch(() => ({{}}));
+                        if (resp.ok && data && data.integrity) return data.integrity;
+                        if (!resp.ok && data && data.error) lastBackendError = String(data.error);
                     }} catch (e) {{
                         // seguir probando otros endpoints
                     }}
@@ -2205,7 +2210,10 @@ def generar_html_completo(productos, recursos, estadisticas):
                 if (!secret || secret.length < 10) {{
                     const modo = (CONFIG_SISTEMA.WOMPI_MODO || '').toLowerCase();
                     if (modo === 'test') {{
-                        throw new Error('Firma no disponible: backend no responde. En test puedes embebir el secret o configurar el Worker.');
+                        const origin = String(window.location.origin || '');
+                        const hint = origin === 'null' ? 'Parece que abriste el HTML como archivo (file://). Abre el catálogo desde la URL del Worker para que /api funcione.' : 'Verifica que estés abriendo el catálogo desde el Worker (no desde un host sin /api).';
+                        const extra = lastBackendError ? ` Detalle: ${{lastBackendError}}` : '';
+                        throw new Error(`Firma no disponible: backend no responde o devolvió error.${{extra}} ${{hint}}`);
                     }}
                     throw new Error('Firma no disponible: backend no responde y no hay secret local.');
                 }}
