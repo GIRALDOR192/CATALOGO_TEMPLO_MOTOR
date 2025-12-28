@@ -17,6 +17,11 @@ CONFIG = {
     # API Keys ACTUALIZADAS
     "WOMPI_PUBLIC_KEY": "pub_prod_I0KpwGvgPD3xNcLggJZKyD3cNUKrywkx",
     "WOMPI_INTEGRITY_SECRET": "prv_prod_vIazSzxilsFQzdiBt75rakWBzccyBfaC",
+    # Claves para modo de prueba (sandbox)
+    "WOMPI_PUBLIC_KEY_TEST": "pub_test_kxjpfDZfl7yubEFUsLa9j3j4An2zZFSL",
+    "WOMPI_INTEGRITY_SECRET_TEST": "prv_test_SVZyC0Ytacjk5SIKJyUUrYrlw2qzfmc1",
+    # Cambia a "test" si vas a usar sandbox
+    "WOMPI_MODO": "prod",
     "RESEND_API_KEY": "re_bpJ7jUFu_8sP5DpVTfjsh1k8AFeL4m5Ji",  # API Key actualizada
     
     # Rutas de archivos
@@ -59,7 +64,7 @@ CONFIG = {
         "REDONDEO": 100,
         "RATING_DEFAULT": 4.9,
         "COMENTARIOS_DEFAULT": 156,
-        "MAX_PRODUCTOS": 10000,
+        "MAX_PRODUCTOS": None,
         "PRODUCTOS_POR_PAGINA": 20
     }
 }
@@ -365,6 +370,11 @@ def generar_html_completo(productos, recursos, estadisticas):
     
     productos_json = json.dumps(productos, ensure_ascii=False, separators=(',', ':'))
     fecha_actual = datetime.now().strftime('%d/%m/%Y %H:%M')
+
+    wompi_modo = str(CONFIG.get('WOMPI_MODO', 'prod')).strip().lower()
+    wompi_public_key = CONFIG['WOMPI_PUBLIC_KEY_TEST'] if wompi_modo == 'test' else CONFIG['WOMPI_PUBLIC_KEY']
+    wompi_integrity_secret = CONFIG['WOMPI_INTEGRITY_SECRET_TEST'] if wompi_modo == 'test' else CONFIG['WOMPI_INTEGRITY_SECRET']
+    wompi_api_base = 'https://sandbox.wompi.co' if wompi_modo == 'test' else 'https://production.wompi.co'
     
     html = f'''<!DOCTYPE html>
 <html lang="es">
@@ -1584,6 +1594,8 @@ def generar_html_completo(productos, recursos, estadisticas):
             gap: 10px;
             margin: 15px 0;
             padding: 10px;
+            width: 100%;
+            box-sizing: border-box;
         }}
 
         .opcion-chat {{
@@ -1596,8 +1608,26 @@ def generar_html_completo(productos, recursos, estadisticas):
             text-align: left;
             color: var(--text-primary);
             font-size: 14px;
+            width: 100%;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            gap: 10px;
             word-wrap: break-word;
+            overflow-wrap: break-word;
             white-space: normal;
+            writing-mode: horizontal-tb;
+            text-orientation: mixed;
+        }}
+
+        .opcion-chat i {{
+            flex: 0 0 auto;
+            margin-top: 1px;
+        }}
+
+        .opcion-chat-text {{
+            flex: 1 1 auto;
+            min-width: 0;
         }}
 
         .opcion-chat:hover {{
@@ -1989,8 +2019,9 @@ def generar_html_completo(productos, recursos, estadisticas):
         // CONFIGURACIÓN DEL SISTEMA ACTUALIZADA
         // ==============================================
         const CONFIG_SISTEMA = {{
-            WOMPI_PUBLIC_KEY: "{CONFIG['WOMPI_PUBLIC_KEY']}",
-            WOMPI_INTEGRITY_SECRET: "{CONFIG['WOMPI_INTEGRITY_SECRET']}",
+            WOMPI_PUBLIC_KEY: "{wompi_public_key}",
+            WOMPI_INTEGRITY_SECRET: "{wompi_integrity_secret}",
+            WOMPI_API_BASE: "{wompi_api_base}",
             RESEND_API_KEY: "{CONFIG['RESEND_API_KEY']}",
             WHATSAPP_NUMERO: "{CONFIG['CONTACTO']['WHATSAPP']}",
             EMAIL_VENDEDOR: "{CONFIG['CONTACTO']['EMAIL_VENDEDOR']}",
@@ -2124,21 +2155,40 @@ def generar_html_completo(productos, recursos, estadisticas):
         // ==============================================
         async function generarFirmaIntegridad(referencia, montoEnCentavos) {{
             try {{
-                const cadenaConcatenada = `${{referencia}}${{montoEnCentavos}}COP${{CONFIG_SISTEMA.WOMPI_INTEGRITY_SECRET}}`;
-                
+                if (!window.crypto || !window.crypto.subtle) {{
+                    throw new Error('WebCrypto no disponible. Abre el catálogo en HTTPS.');
+                }}
+
+                const currency = 'COP';
+                const secret = String(CONFIG_SISTEMA.WOMPI_INTEGRITY_SECRET || '');
+                if (!secret || secret.length < 10) {{
+                    throw new Error('WOMPI_INTEGRITY_SECRET no está configurado.');
+                }}
+
+                const cadenaConcatenada = `${{String(referencia)}}${{String(montoEnCentavos)}}${{currency}}${{secret}}`;
+
                 const encoder = new TextEncoder();
                 const data = encoder.encode(cadenaConcatenada);
                 const hashBuffer = await crypto.subtle.digest('SHA-256', data);
                 const hashArray = Array.from(new Uint8Array(hashBuffer));
                 const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-                
+
                 console.log('Firma generada para referencia:', referencia);
                 return hashHex;
-                
             }} catch (error) {{
                 console.error('Error generando firma:', error);
-                return '3a4bd1f3e3edb5e88284c8e1e9a191fdf091ef0dfca9f057cb8f408667f054d0';
+                throw error;
             }}
+        }}
+
+        function generarReferenciaWompi(productoId) {{
+            // Wompi suele requerir referencia corta (p.ej. <= 32 chars). Evita caracteres raros.
+            const rawId = (productoId === 'carrito') ? 'CARRITO' : String(productoId ?? 'PROD');
+            const idPart = rawId.replace(/[^a-zA-Z0-9]/g, '').slice(0, 8).toUpperCase();
+            const timePart = Date.now().toString(36).toUpperCase();
+            const randPart = Math.random().toString(36).slice(2, 7).toUpperCase();
+            const ref = `TG_${{idPart}}_${{timePart}}_${{randPart}}`;
+            return ref.slice(0, 32);
         }}
 
         // ==============================================
@@ -2579,7 +2629,7 @@ def generar_html_completo(productos, recursos, estadisticas):
             try {{
                 const precioFinal = producto.precio_final;
                 const montoEnCentavos = Math.round(precioFinal * 100);
-                const referencia = `TG_${{producto.id === 'carrito' ? 'CARRITO' : producto.id}}_${{Date.now()}}_${{Math.random().toString(36).substr(2, 9).toUpperCase()}}`;
+                const referencia = generarReferenciaWompi(producto.id);
                 const firmaIntegridad = await generarFirmaIntegridad(referencia, montoEnCentavos);
                 
                 console.log('=== CONFIGURACIÓN WOMPI ===');
@@ -2593,7 +2643,8 @@ def generar_html_completo(productos, recursos, estadisticas):
                     reference: referencia,
                     publicKey: CONFIG_SISTEMA.WOMPI_PUBLIC_KEY,
                     signature: {{ integrity: firmaIntegridad }},
-                    redirectUrl: 'https://templogarage.com/confirmacion',
+                    // En GitHub Pages no existe templogarage.com/confirmacion; usar la misma página evita redirects rotos.
+                    redirectUrl: window.location.href.split('#')[0],
                     customerData: {{
                         email: cliente.email,
                         fullName: cliente.nombre,
@@ -3063,16 +3114,20 @@ def generar_html_completo(productos, recursos, estadisticas):
                 const opcionesHTML = `
                     <div class="opciones-chat">
                         <button class="opcion-chat" onclick="seleccionarOpcionChat(1)">
-                            <i class="fas fa-search"></i> Buscar un repuesto específico
+                            <i class="fas fa-search"></i>
+                            <span class="opcion-chat-text">Buscar un repuesto específico</span>
                         </button>
                         <button class="opcion-chat" onclick="seleccionarOpcionChat(2)">
-                            <i class="fas fa-user-tie"></i> Contactar a un asesor
+                            <i class="fas fa-user-tie"></i>
+                            <span class="opcion-chat-text">Contactar a un asesor</span>
                         </button>
                         <button class="opcion-chat" onclick="seleccionarOpcionChat(3)">
-                            <i class="fas fa-truck"></i> Información sobre envíos
+                            <i class="fas fa-truck"></i>
+                            <span class="opcion-chat-text">Información sobre envíos</span>
                         </button>
                         <button class="opcion-chat" onclick="seleccionarOpcionChat(4)">
-                            <i class="fas fa-credit-card"></i> Métodos de pago
+                            <i class="fas fa-credit-card"></i>
+                            <span class="opcion-chat-text">Métodos de pago</span>
                         </button>
                     </div>
                 `;
@@ -3183,11 +3238,12 @@ def generar_html_completo(productos, recursos, estadisticas):
                 
             }} else if (estadoChat === 'enviar_asesor') {{
                 if (preguntaLower.includes('si') || preguntaLower.includes('sí')) {{
-                    const mensaje = `🚨 SOLICITUD DE ASESOR - TEMPLO GARAGE%0A%0A` +
-                                   `🆔 Cliente: Chat Web%0A` +
-                                   `📝 Detalles:%0A${{datosChatAsesor.detalles.replace(/\\n/g, '%0A')}}%0A%0A` +
+                    const detalles = (datosChatAsesor.detalles || '').trim();
+                    const mensaje = `🚨 SOLICITUD DE ASESOR - TEMPLO GARAGE\n\n` +
+                                   `🆔 Cliente: Chat Web\n` +
+                                   `📝 Detalles:\n${{detalles}}\n\n` +
                                    `🕒 Fecha: ${{new Date().toLocaleString()}}`;
-                    
+
                     window.open(`https://wa.me/${{CONFIG_SISTEMA.WHATSAPP_NUMERO}}?text=${{encodeURIComponent(mensaje)}}`, '_blank');
                     agregarMensajeChat('✅ He abierto WhatsApp para que puedas contactar a nuestro asesor con toda la información. ¿En qué más puedo ayudarte?', 'bot');
                 }} else {{
@@ -3554,9 +3610,10 @@ def generar_catalogo_completo():
         
         df_limpio = limpiar_datos_excel(df)
         
-        if len(df_limpio) > CONFIG["PARAMETROS"]["MAX_PRODUCTOS"]:
-            print(f"   ⚠️ Limitar a {CONFIG['PARAMETROS']['MAX_PRODUCTOS']} productos")
-            df_limpio = df_limpio.head(CONFIG["PARAMETROS"]["MAX_PRODUCTOS"])
+        max_productos = CONFIG["PARAMETROS"].get("MAX_PRODUCTOS")
+        if isinstance(max_productos, int) and max_productos > 0 and len(df_limpio) > max_productos:
+            print(f"   ⚠️ Limitar a {max_productos} productos")
+            df_limpio = df_limpio.head(max_productos)
         
         procesador = ProcesadorProductos()
         productos = procesador.procesar_dataframe(df_limpio)
