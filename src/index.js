@@ -45,18 +45,10 @@ export default {
         return jsonResponse({ error: 'Method not allowed' }, 405, { 'access-control-allow-origin': '*' });
       }
 
-      // Soporta secretos separados por modo para evitar mezcla test/prod
-      // - WOMPI_INTEGRITY_SECRET_PROD
-      // - WOMPI_INTEGRITY_SECRET_TEST
-      // - WOMPI_INTEGRITY_SECRET (fallback)
-      const fallbackSecret = env.WOMPI_INTEGRITY_SECRET;
-      if (!fallbackSecret && !env.WOMPI_INTEGRITY_SECRET_PROD && !env.WOMPI_INTEGRITY_SECRET_TEST) {
-        return jsonResponse(
-          { error: 'Missing WOMPI_INTEGRITY_SECRET (configure as a secret in Cloudflare).' },
-          500,
-          { 'access-control-allow-origin': '*' }
-        );
-      }
+      // Importante: NO mezclar secretos entre modos.
+      // Si el frontend indica mode=test, exigimos WOMPI_INTEGRITY_SECRET_TEST.
+      // Si indica mode=prod, exigimos WOMPI_INTEGRITY_SECRET_PROD.
+      // Solo si no llega mode, usamos WOMPI_INTEGRITY_SECRET (fallback).
 
       let payload;
       try {
@@ -80,15 +72,34 @@ export default {
         return jsonResponse({ error: 'currency is required' }, 400, { 'access-control-allow-origin': '*' });
       }
 
-      let secret = fallbackSecret;
-      if (mode === 'prod') secret = env.WOMPI_INTEGRITY_SECRET_PROD || secret;
-      if (mode === 'test') secret = env.WOMPI_INTEGRITY_SECRET_TEST || secret;
-      if (!secret) {
-        return jsonResponse(
-          { error: 'No integrity secret configured for requested mode. Set WOMPI_INTEGRITY_SECRET_(PROD|TEST) or WOMPI_INTEGRITY_SECRET.' },
-          500,
-          { 'access-control-allow-origin': '*' }
-        );
+      let secret;
+      if (mode === 'test') {
+        secret = env.WOMPI_INTEGRITY_SECRET_TEST;
+        if (!secret) {
+          return jsonResponse(
+            { error: 'Missing WOMPI_INTEGRITY_SECRET_TEST for mode=test. Configure it as a Cloudflare secret and redeploy.' },
+            500,
+            { 'access-control-allow-origin': '*' }
+          );
+        }
+      } else if (mode === 'prod') {
+        secret = env.WOMPI_INTEGRITY_SECRET_PROD;
+        if (!secret) {
+          return jsonResponse(
+            { error: 'Missing WOMPI_INTEGRITY_SECRET_PROD for mode=prod. Configure it as a Cloudflare secret and redeploy.' },
+            500,
+            { 'access-control-allow-origin': '*' }
+          );
+        }
+      } else {
+        secret = env.WOMPI_INTEGRITY_SECRET;
+        if (!secret) {
+          return jsonResponse(
+            { error: 'Missing WOMPI_INTEGRITY_SECRET (no mode provided). Configure it as a Cloudflare secret and redeploy.' },
+            500,
+            { 'access-control-allow-origin': '*' }
+          );
+        }
       }
 
       const concatenated = `${reference}${Math.round(amountInCents)}${currency}${secret}`;
