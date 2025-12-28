@@ -1036,6 +1036,7 @@ def generar_html_completo(productos, recursos, estadisticas):
             background: rgba(255,255,255,0.04);
             box-shadow: var(--card-shadow);
             overflow: hidden;
+            position: relative;
         }}
 
         [data-theme="light"] .splash-card {{
@@ -1050,26 +1051,64 @@ def generar_html_completo(productos, recursos, estadisticas):
             object-fit: contain;
         }}
 
-        /* Compartir producto */
-        .btn-compartir {{
-            flex: 1;
-            background: rgba(255,255,255,0.06);
-            color: var(--text-primary);
+        .splash-close {{
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
             border: 1px solid var(--border-color);
-            padding: 14px;
-            border-radius: 10px;
+            background: rgba(0,0,0,0.55);
+            color: var(--text-primary);
+            font-size: 28px;
+            line-height: 36px;
+            font-weight: 900;
             cursor: pointer;
-            transition: transform var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast);
-            display: flex;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            position: relative;
+            z-index: 2;
+            transition: transform var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast);
+        }}
+
+        .splash-close:hover {{
+            transform: translateY(-1px);
+            background: rgba(0,0,0,0.70);
+            border-color: rgba(255,0,0,0.45);
+        }}
+
+        [data-theme="light"] .splash-close {{
+            background: rgba(255,255,255,0.75);
+        }}
+
+        /* Compartir producto */
+        .btn-compartir {{
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            background: rgba(0,0,0,0.35);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: transform var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 3;
         }}
 
         .btn-compartir:hover {{
             transform: translateY(-2px);
             border-color: rgba(26,35,126,0.55);
-            background: rgba(255,255,255,0.10);
+            background: rgba(0,0,0,0.55);
+        }}
+
+        [data-theme="light"] .btn-compartir {{
+            background: rgba(255,255,255,0.70);
         }}
 
         .modal-compartir {{
@@ -2491,6 +2530,7 @@ def generar_html_completo(productos, recursos, estadisticas):
     <!-- Splash anuncio (medios de pago) -->
     <div class="splash-overlay" id="splashOverlay" aria-hidden="true">
         <div class="splash-card">
+            <button class="splash-close" type="button" aria-label="Cerrar anuncio" onclick="cerrarSplashAnuncio()">&times;</button>
             <img src="{recursos.get('anuncio', '')}" alt="Medios de pago disponibles">
         </div>
     </div>
@@ -3252,6 +3292,9 @@ def generar_html_completo(productos, recursos, estadisticas):
                 card.id = `p-${{producto.id}}`;
                 card.innerHTML = `
                     ${{producto.precio > 0 && Math.random() > 0.7 ? '<div class="producto-badge oferta">OFERTA</div>' : ''}}
+                    <button class="btn-compartir" type="button" onclick="compartirProducto(${{producto.id}})" title="Compartir" aria-label="Compartir">
+                        <i class="fas fa-share-alt"></i>
+                    </button>
                     <div class="producto-imagen">
                         <img src="${{producto.imagen}}" alt="${{producto.nombre}}" loading="lazy">
                     </div>
@@ -3275,9 +3318,6 @@ def generar_html_completo(productos, recursos, estadisticas):
                                 <i class="fas fa-cart-plus"></i>
                                 ${{cantidadEnCarrito > 0 ? `<span class="contador-carrito-mini">${{cantidadEnCarrito}}</span>` : ''}}
                             </button>
-                            <button class="btn-compartir" onclick="compartirProducto(${{producto.id}})" title="Compartir">
-                                <i class="fas fa-share-alt"></i>
-                            </button>
                         </div>
                     </div>
                 `;
@@ -3289,15 +3329,30 @@ def generar_html_completo(productos, recursos, estadisticas):
         // ==============================================
         // SPLASH INICIAL (ANUNCIO)
         // ==============================================
+        let splashTimeoutId = null;
+
+        function cerrarSplashAnuncio() {{
+            const overlay = document.getElementById('splashOverlay');
+            if (!overlay) return;
+            if (splashTimeoutId) {{
+                clearTimeout(splashTimeoutId);
+                splashTimeoutId = null;
+            }}
+            overlay.classList.remove('show');
+            overlay.setAttribute('aria-hidden', 'true');
+        }}
+
         function mostrarSplashAnuncio() {{
             const overlay = document.getElementById('splashOverlay');
             if (!overlay) return;
             const img = overlay.querySelector('img');
             if (!img || !img.getAttribute('src')) return;
             overlay.classList.add('show');
-            setTimeout(() => {{
-                overlay.classList.remove('show');
-            }}, 2500);
+            overlay.setAttribute('aria-hidden', 'false');
+            if (splashTimeoutId) clearTimeout(splashTimeoutId);
+            splashTimeoutId = setTimeout(() => {{
+                cerrarSplashAnuncio();
+            }}, 5000);
         }}
 
         // ==============================================
