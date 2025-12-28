@@ -2020,8 +2020,10 @@ def generar_html_completo(productos, recursos, estadisticas):
         // ==============================================
         const CONFIG_SISTEMA = {{
             WOMPI_PUBLIC_KEY: "{wompi_public_key}",
-            WOMPI_INTEGRITY_SECRET: "{wompi_integrity_secret}",
+            // NO expongas el secret en frontend; se calcula en backend (Worker)
+            WOMPI_INTEGRITY_SECRET: "",
             WOMPI_API_BASE: "{wompi_api_base}",
+            WOMPI_SIGNATURE_ENDPOINT: "/api/wompi/signature",
             RESEND_API_KEY: "{CONFIG['RESEND_API_KEY']}",
             WHATSAPP_NUMERO: "{CONFIG['CONTACTO']['WHATSAPP']}",
             EMAIL_VENDEDOR: "{CONFIG['CONTACTO']['EMAIL_VENDEDOR']}",
@@ -2155,26 +2157,39 @@ def generar_html_completo(productos, recursos, estadisticas):
         // ==============================================
         async function generarFirmaIntegridad(referencia, montoEnCentavos) {{
             try {{
+                // Preferido: pedir firma al backend (Worker) para no exponer el secret.
+                const endpoint = CONFIG_SISTEMA.WOMPI_SIGNATURE_ENDPOINT || '/api/wompi/signature';
+                const currency = 'COP';
+
+                try {{
+                    const resp = await fetch(endpoint, {{
+                        method: 'POST',
+                        headers: {{ 'Content-Type': 'application/json' }},
+                        body: JSON.stringify({{ reference: referencia, amountInCents: montoEnCentavos, currency }})
+                    }});
+                    if (resp.ok) {{
+                        const data = await resp.json();
+                        if (data && data.integrity) {{
+                            return data.integrity;
+                        }}
+                    }}
+                }} catch (e) {{
+                    console.warn('No se pudo obtener firma desde backend, intentando modo local:', e);
+                }}
+
+                // Fallback local (solo si alguien decide embebir el secret; NO recomendado para producción)
                 if (!window.crypto || !window.crypto.subtle) {{
                     throw new Error('WebCrypto no disponible. Abre el catálogo en HTTPS.');
                 }}
-
-                const currency = 'COP';
                 const secret = String(CONFIG_SISTEMA.WOMPI_INTEGRITY_SECRET || '');
                 if (!secret || secret.length < 10) {{
-                    throw new Error('WOMPI_INTEGRITY_SECRET no está configurado.');
+                    throw new Error('Firma no disponible: backend no responde y no hay secret local.');
                 }}
-
                 const cadenaConcatenada = `${{String(referencia)}}${{String(montoEnCentavos)}}${{currency}}${{secret}}`;
-
                 const encoder = new TextEncoder();
-                const data = encoder.encode(cadenaConcatenada);
-                const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(cadenaConcatenada));
                 const hashArray = Array.from(new Uint8Array(hashBuffer));
-                const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-
-                console.log('Firma generada para referencia:', referencia);
-                return hashHex;
+                return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
             }} catch (error) {{
                 console.error('Error generando firma:', error);
                 throw error;
@@ -3634,12 +3649,20 @@ def generar_catalogo_completo():
         
         # 5. GUARDAR ARCHIVO
         output_path = CONFIG["RUTAS"]["SALIDA"]
+        public_output_path = os.path.join('public', 'index.html')
+
+        os.makedirs(os.path.dirname(public_output_path), exist_ok=True)
         with open(output_path, 'w', encoding='utf-8') as f:
+            f.write(html)
+
+        # Salida para Cloudflare Worker/Pages (assets)
+        with open(public_output_path, 'w', encoding='utf-8') as f:
             f.write(html)
         
         tiempo_total = time.time() - start_time
         
         print(f"\n💾 ARCHIVO GUARDADO: {output_path}")
+        print(f"   • Copia para deploy: {public_output_path}")
         print(f"   • Tamaño: {os.path.getsize(output_path)/1024/1024:.2f} MB")
         print(f"   • Tiempo total: {tiempo_total:.2f} segundos")
         print(f"   • Productos/segundo: {estadisticas['total']/tiempo_total:.2f}")

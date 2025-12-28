@@ -1,0 +1,16 @@
+{
+  // Cloudflare Worker + Static Assets
+  // Se despliega con: npx wrangler deploy
+  "name": "templogarage",
+  "main": "src/index.js",
+  "compatibility_date": "2025-12-28",
+  "assets": {
+    "directory": "./public"
+  },
+  "vars": {
+    "WOMPI_CURRENCY": "COP"
+  }
+  // IMPORTANTE: configura secretos en Cloudflare (no en Git):
+  // - WOMPI_INTEGRITY_SECRET
+  // - RESEND_API_KEY (si lo usas desde backend)
+}
