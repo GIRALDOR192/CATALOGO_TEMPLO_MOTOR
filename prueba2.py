@@ -766,7 +766,8 @@ def generar_html_completo(productos, recursos, estadisticas):
         .btn-carrito-flotante,
         .btn-toggle-modo,
         .btn-whatsapp-flotante,
-        .btn-chat-flotante {{
+        .btn-chat-flotante,
+        .btn-volver-catalogo {{
             width: 55px;
             height: 55px;
             border-radius: 50%;
@@ -778,6 +779,12 @@ def generar_html_completo(productos, recursos, estadisticas):
             border: none;
             transition: transform 0.3s, box-shadow 0.3s;
             position: relative;
+        }}
+
+        .btn-volver-catalogo {{
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
         }}
 
         .btn-toggle-modo {{
@@ -2388,7 +2395,8 @@ def generar_html_completo(productos, recursos, estadisticas):
         .topbar-actions .btn-toggle-modo,
         .topbar-actions .btn-whatsapp-flotante,
         .topbar-actions .btn-carrito-flotante,
-        .topbar-actions .btn-chat-flotante {{
+        .topbar-actions .btn-chat-flotante,
+        .topbar-actions .btn-volver-catalogo {{
             position: relative !important;
             right: auto !important;
             bottom: auto !important;
@@ -2600,6 +2608,9 @@ def generar_html_completo(productos, recursos, estadisticas):
                     </div>
 
                     <div class="topbar-actions" aria-label="Acciones">
+                        <button class="btn-volver-catalogo" id="btnVolverCatalogo" title="Volver al catálogo" aria-label="Volver al catálogo" style="display:none;">
+                            <i class="fas fa-list"></i>
+                        </button>
                         <button class="btn-toggle-modo" id="btnToggleModo" title="Cambiar tema" aria-label="Cambiar tema">
                             <i class="fas fa-moon"></i>
                         </button>
@@ -3190,9 +3201,13 @@ def generar_html_completo(productos, recursos, estadisticas):
             inicializarFiltros();
             inicializarBotonesWhatsapp();
 
+            const btnVolver = document.getElementById('btnVolverCatalogo');
+            if (btnVolver) btnVolver.addEventListener('click', volverAlCatalogo);
+
             manejarDeepLinkProducto();
 
             window.addEventListener('hashchange', manejarDeepLinkProducto);
+            window.addEventListener('popstate', manejarDeepLinkProducto);
             
             // Mensaje de bienvenida en chat
             setTimeout(() => {{
@@ -3219,6 +3234,32 @@ def generar_html_completo(productos, recursos, estadisticas):
             // Event listeners para filtros
             filtroMarcaEl.addEventListener('change', aplicarFiltros);
             filtroTipoEl.addEventListener('change', aplicarFiltros);
+        }}
+
+        // ==============================================
+        // VISTA ÚNICA DE PRODUCTO (COMPARTIDO)
+        // ==============================================
+        let soloProductoId = null;
+
+        function activarVistaProducto(productoId) {{
+            soloProductoId = productoId;
+            const btn = document.getElementById('btnVolverCatalogo');
+            if (btn) btn.style.display = 'inline-flex';
+        }}
+
+        function desactivarVistaProducto() {{
+            soloProductoId = null;
+            const btn = document.getElementById('btnVolverCatalogo');
+            if (btn) btn.style.display = 'none';
+        }}
+
+        function volverAlCatalogo() {{
+            desactivarVistaProducto();
+            const u = new URL(window.location.href);
+            u.searchParams.delete('p');
+            u.hash = '';
+            history.pushState(null, '', u.toString());
+            aplicarFiltros();
         }}
 
         function poblarFiltrosCategoria() {{
@@ -3259,11 +3300,18 @@ def generar_html_completo(productos, recursos, estadisticas):
             }}
 
             filtrados = aplicarVista(filtrados);
+
+            // Si viene de un link compartido: mostrar SOLO ese producto.
+            if (soloProductoId) {{
+                filtrados = filtrados.filter(p => p.id === soloProductoId);
+            }}
             
             productos = filtrados;
             totalPaginas = Math.ceil(productos.length / CONFIG_SISTEMA.PRODUCTOS_POR_PAGINA);
             mostrarPagina(1);
-            mostrarToast(`${{filtrados.length}} productos encontrados`, 'info');
+            if (!soloProductoId) {{
+                mostrarToast(`${{filtrados.length}} productos encontrados`, 'info');
+            }}
         }}
 
         // ==============================================
@@ -3449,10 +3497,19 @@ def generar_html_completo(productos, recursos, estadisticas):
             const param = url.searchParams.get('p');
             const matchParam = (param && /^\\d+$/.test(param)) ? parseInt(param, 10) : null;
             const id = matchHash ? parseInt(matchHash[1], 10) : matchParam;
-            if (!id) return;
+            if (!id) {{
+                if (soloProductoId) {{
+                    desactivarVistaProducto();
+                    aplicarFiltros();
+                }}
+                return;
+            }}
 
             const producto = todosProductos.find(p => p.id === id);
             if (!producto) return;
+
+            // Activar vista única: solo se muestra este producto.
+            activarVistaProducto(id);
 
             // Normalizar URL para que siempre quede con hash (ayuda a copiar/reenviar)
             const u2 = new URL(window.location.href);
@@ -3471,11 +3528,8 @@ def generar_html_completo(productos, recursos, estadisticas):
             aplicarFiltros();
 
             const navegarYEnfocar = () => {{
-                const idx = (productos || []).findIndex(p => p.id === id);
-                if (idx >= 0) {{
-                    const pagina = Math.floor(idx / CONFIG_SISTEMA.PRODUCTOS_POR_PAGINA) + 1;
-                    mostrarPagina(pagina);
-                }}
+                // En vista única ya está filtrado, pero dejamos la lógica segura.
+                mostrarPagina(1);
 
                 // Reintentar hasta que la tarjeta exista (solo se renderiza en su página)
                 let intentos = 0;
