@@ -22,7 +22,7 @@ CONFIG = {
     "WOMPI_PUBLIC_KEY_TEST": os.getenv("WOMPI_PUBLIC_KEY_TEST", "pub_test_kxjpfDZfl7yubEFUsLa9j3j4An2zZFSL"),
     "WOMPI_INTEGRITY_SECRET_TEST": os.getenv("WOMPI_INTEGRITY_SECRET_TEST", ""),
     # Cambia a "test" si vas a usar sandbox
-    "WOMPI_MODO": "test",
+    "WOMPI_MODO": "prod",
     # URL pública del Worker (para firmar incluso si abres el HTML desde file:// o GitHub Pages)
     "WORKER_PUBLIC_BASE_URL": os.getenv(
         "WORKER_PUBLIC_BASE_URL",
