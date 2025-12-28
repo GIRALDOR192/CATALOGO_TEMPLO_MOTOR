@@ -3982,6 +3982,15 @@ def generar_html_completo(productos, recursos, estadisticas):
             }}, 500);
         }}
 
+        function responderConfirmacionAsesor(acepta) {{
+            // Deshabilitar botones para evitar doble click
+            document.querySelectorAll('[data-confirm-asesor]')
+                .forEach(btn => btn.disabled = true);
+
+            agregarMensajeChat(acepta ? 'Sí' : 'No', 'usuario');
+            responderChat(acepta ? 'sí' : 'no');
+        }}
+
         function responderChat(pregunta) {{
             const preguntaLower = pregunta.toLowerCase();
             
@@ -4012,8 +4021,19 @@ def generar_html_completo(productos, recursos, estadisticas):
             }} else if (estadoChat === 'opcion_2') {{
                 // Procesar información para asesor
                 datosChatAsesor = {{...datosChatAsesor, detalles: pregunta}};
-                
-                agregarMensajeChat('📝 Información recibida. ¿Quieres que envíe estos detalles a un asesor por WhatsApp? (responde "sí" o "no")', 'bot');
+
+                agregarMensajeChat(
+                    '📝 Información recibida. ¿Quieres que envíe estos detalles a un asesor por WhatsApp?'
+                    + '<div class="opciones-chat" style="margin-top: 10px;">'
+                    + '  <button type="button" class="opcion-chat" data-confirm-asesor onclick="responderConfirmacionAsesor(true)">'
+                    + '    <i class="fas fa-check"></i><span class="opcion-chat-text">Sí, enviar por WhatsApp</span>'
+                    + '  </button>'
+                    + '  <button type="button" class="opcion-chat" data-confirm-asesor onclick="responderConfirmacionAsesor(false)">'
+                    + '    <i class="fas fa-times"></i><span class="opcion-chat-text">No, gracias</span>'
+                    + '  </button>'
+                    + '</div>',
+                    'bot'
+                );
                 estadoChat = 'enviar_asesor';
                 
             }} else if (estadoChat === 'enviar_asesor') {{
