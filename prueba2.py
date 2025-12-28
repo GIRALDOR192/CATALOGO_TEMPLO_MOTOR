@@ -27,7 +27,7 @@ CONFIG = {
     # URL pública del Worker (para firmar incluso si abres el HTML desde file:// o GitHub Pages)
     "WORKER_PUBLIC_BASE_URL": os.getenv(
         "WORKER_PUBLIC_BASE_URL",
-        "https://catalogo-templo-motor.giraldor192.workers.dev"
+        "https://catalogo.templogarage.com"
     ),
     # No embebas esta API key en el HTML (se expone públicamente). Configúrala por env para uso backend.
     "RESEND_API_KEY": os.getenv("RESEND_API_KEY", ""),
