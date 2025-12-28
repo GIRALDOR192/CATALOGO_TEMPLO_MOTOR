@@ -13,6 +13,12 @@ function jsonResponse(obj, status = 200, extraHeaders = {}) {
   });
 }
 
+function looksLikeWompiApiKey(value) {
+  // Wompi API keys suelen empezar por pub_* / prv_*. El Integrity Secret NO.
+  const v = String(value || '').trim();
+  return /^pub_/i.test(v) || /^prv_/i.test(v);
+}
+
 async function sha256Hex(input) {
   const data = new TextEncoder().encode(input);
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
@@ -32,6 +38,9 @@ export default {
         hasWompiTestSecret: !!env.WOMPI_INTEGRITY_SECRET_TEST,
         hasWompiProdSecret: !!env.WOMPI_INTEGRITY_SECRET_PROD,
         hasWompiFallbackSecret: !!env.WOMPI_INTEGRITY_SECRET,
+        wompiTestSecretLooksLikeApiKey: looksLikeWompiApiKey(env.WOMPI_INTEGRITY_SECRET_TEST),
+        wompiProdSecretLooksLikeApiKey: looksLikeWompiApiKey(env.WOMPI_INTEGRITY_SECRET_PROD),
+        wompiFallbackSecretLooksLikeApiKey: looksLikeWompiApiKey(env.WOMPI_INTEGRITY_SECRET),
       });
     }
 
@@ -72,8 +81,12 @@ export default {
       if (!reference) {
         return jsonResponse({ error: 'reference is required' }, 400, { 'access-control-allow-origin': '*' });
       }
-      if (!Number.isFinite(amountInCents) || amountInCents <= 0) {
-        return jsonResponse({ error: 'amountInCents must be a positive number' }, 400, { 'access-control-allow-origin': '*' });
+      if (!Number.isFinite(amountInCents) || amountInCents <= 0 || !Number.isInteger(amountInCents)) {
+        return jsonResponse(
+          { error: 'amountInCents must be a positive integer (in cents)' },
+          400,
+          { 'access-control-allow-origin': '*' }
+        );
       }
       if (!currency) {
         return jsonResponse({ error: 'currency is required' }, 400, { 'access-control-allow-origin': '*' });
@@ -110,6 +123,18 @@ export default {
       }
 
       const concatenated = `${reference}${Math.round(amountInCents)}${currency}${secret}`;
+
+      if (looksLikeWompiApiKey(secret)) {
+        return jsonResponse(
+          {
+            error:
+              'The configured integrity secret looks like a Wompi API key (pub_/prv_). Wompi signatures require the Integrity Secret from the Wompi dashboard (Integridad), not the private key.',
+          },
+          500,
+          { 'access-control-allow-origin': '*' }
+        );
+      }
+
       const integrity = await sha256Hex(concatenated);
 
       return jsonResponse({ integrity }, 200, { 'access-control-allow-origin': '*' });

@@ -15,14 +15,16 @@ import requests  # Añadir para usar Resend API
 # ==============================================
 CONFIG = {
     # API Keys ACTUALIZADAS
-    "WOMPI_PUBLIC_KEY": "pub_prod_I0KpwGvgPD3xNcLggJZKyD3cNUKrywkx",
-    "WOMPI_INTEGRITY_SECRET": "prv_prod_vIazSzxilsFQzdiBt75rakWBzccyBfaC",
+    "WOMPI_PUBLIC_KEY": os.getenv("WOMPI_PUBLIC_KEY", "pub_prod_I0KpwGvgPD3xNcLggJZKyD3cNUKrywkx"),
+    # IMPORTANTE: El Integrity Secret NO es la llave privada (prv_*). Debe configurarse por variable de entorno.
+    "WOMPI_INTEGRITY_SECRET": os.getenv("WOMPI_INTEGRITY_SECRET", ""),
     # Claves para modo de prueba (sandbox)
-    "WOMPI_PUBLIC_KEY_TEST": "pub_test_kxjpfDZfl7yubEFUsLa9j3j4An2zZFSL",
-    "WOMPI_INTEGRITY_SECRET_TEST": "prv_test_SVZyC0Ytacjk5SIKJyUUrYrlw2qzfmc1",
+    "WOMPI_PUBLIC_KEY_TEST": os.getenv("WOMPI_PUBLIC_KEY_TEST", "pub_test_kxjpfDZfl7yubEFUsLa9j3j4An2zZFSL"),
+    "WOMPI_INTEGRITY_SECRET_TEST": os.getenv("WOMPI_INTEGRITY_SECRET_TEST", ""),
     # Cambia a "test" si vas a usar sandbox
     "WOMPI_MODO": "test",
-    "RESEND_API_KEY": "re_bpJ7jUFu_8sP5DpVTfjsh1k8AFeL4m5Ji",  # API Key actualizada
+    # No embebas esta API key en el HTML (se expone públicamente). Configúrala por env para uso backend.
+    "RESEND_API_KEY": os.getenv("RESEND_API_KEY", ""),
     
     # Rutas de archivos
     "RUTAS": {
@@ -373,11 +375,10 @@ def generar_html_completo(productos, recursos, estadisticas):
 
     wompi_modo = str(CONFIG.get('WOMPI_MODO', 'prod')).strip().lower()
     wompi_public_key = CONFIG['WOMPI_PUBLIC_KEY_TEST'] if wompi_modo == 'test' else CONFIG['WOMPI_PUBLIC_KEY']
-    wompi_integrity_secret = CONFIG['WOMPI_INTEGRITY_SECRET_TEST'] if wompi_modo == 'test' else CONFIG['WOMPI_INTEGRITY_SECRET']
     wompi_api_base = 'https://sandbox.wompi.co' if wompi_modo == 'test' else 'https://production.wompi.co'
 
-    # En modo test permitimos fallback local (solo para pruebas). En prod, NO se debe exponer el secret.
-    wompi_integrity_secret_frontend = wompi_integrity_secret if wompi_modo == 'test' else ''
+    # Nunca exponer secretos en el frontend.
+    wompi_integrity_secret_frontend = ''
     
     html = f'''<!DOCTYPE html>
 <html lang="es">
@@ -2024,11 +2025,12 @@ def generar_html_completo(productos, recursos, estadisticas):
         const CONFIG_SISTEMA = {{
             WOMPI_PUBLIC_KEY: "{wompi_public_key}",
             WOMPI_MODO: "{wompi_modo}",
-            // En test se permite fallback local; en prod se mantiene vacío.
+            // Nunca exponer secretos en el frontend.
             WOMPI_INTEGRITY_SECRET: "{wompi_integrity_secret_frontend}",
             WOMPI_API_BASE: "{wompi_api_base}",
             WOMPI_SIGNATURE_ENDPOINT: "/api/wompi/signature",
-            RESEND_API_KEY: "{CONFIG['RESEND_API_KEY']}",
+            // No embebas la API key de Resend en HTML público.
+            RESEND_API_KEY: "",
             WHATSAPP_NUMERO: "{CONFIG['CONTACTO']['WHATSAPP']}",
             EMAIL_VENDEDOR: "{CONFIG['CONTACTO']['EMAIL_VENDEDOR']}",
             EMAIL_VENTAS: "{CONFIG['CONTACTO']['EMAIL_VENTAS']}",
@@ -2855,6 +2857,10 @@ def generar_html_completo(productos, recursos, estadisticas):
                         </div>
                     </div>
                 `;
+
+                if (!CONFIG_SISTEMA.RESEND_API_KEY) {{
+                    throw new Error('Resend API key no configurada en el frontend. Usando fallback mailto.');
+                }}
                 
                 const response = await fetch('https://api.resend.com/emails', {{
                     method: 'POST',
@@ -3024,6 +3030,10 @@ def generar_html_completo(productos, recursos, estadisticas):
                         </div>
                     </div>
                 `;
+
+                if (!CONFIG_SISTEMA.RESEND_API_KEY) {{
+                    throw new Error('Resend API key no configurada en el frontend. Usando fallback mailto.');
+                }}
                 
                 const response = await fetch('https://api.resend.com/emails', {{
                     method: 'POST',
@@ -3714,8 +3724,9 @@ Tamaño: {os.path.getsize(output_path)/1024/1024:.2f} MB
 
 CONFIGURACIÓN ACTUALIZADA:
 - Llave Pública Wompi: {CONFIG['WOMPI_PUBLIC_KEY'][:20]}...
-- Secreto Integridad Wompi: {CONFIG['WOMPI_INTEGRITY_SECRET'][:20]}...
-- API Key Resend: {CONFIG['RESEND_API_KEY'][:20]}... (Configurada correctamente)
+- Modo Wompi: {CONFIG.get('WOMPI_MODO', 'prod')}
+- Integrity Secret Wompi: {'CONFIGURADO' if CONFIG.get('WOMPI_INTEGRITY_SECRET') or CONFIG.get('WOMPI_INTEGRITY_SECRET_TEST') else 'NO CONFIGURADO'}
+- Resend API Key: {'CONFIGURADO' if CONFIG.get('RESEND_API_KEY') else 'NO CONFIGURADO (no se embebe en el HTML)'}
 - WhatsApp: {CONFIG['CONTACTO']['WHATSAPP']}
 - Email Vendedor: {CONFIG['CONTACTO']['EMAIL_VENDEDOR']}
 - Email Ventas: {CONFIG['CONTACTO']['EMAIL_VENTAS']}
